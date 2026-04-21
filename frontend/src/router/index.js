@@ -20,6 +20,12 @@ const routes = [
     component: () => import('@/views/DashboardView.vue'),
     meta: { requiresAuth: true },
   },
+  {
+    path: '/efetivo',
+    name: 'Efetivo',
+    component: () => import('@/views/EfetivoView.vue'),
+    meta: { requiresAuth: true },
+  },
 ]
 
 const router = createRouter({

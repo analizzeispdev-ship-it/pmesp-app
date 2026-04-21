@@ -1,107 +1,138 @@
 <template>
   <div class="page">
-    <div class="card">
-      <!-- Header -->
-      <div class="card-header">
-        <div class="shield-icon">
-          <svg viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg">
-            <path d="M50 4L6 24V60C6 86 26 107 50 118C74 107 94 86 94 60V24L50 4Z" fill="#1a3a6b" stroke="#c8a951" stroke-width="2.5" />
-            <path d="M50 28L54.8 43H70L58 51.5L62.8 66.5L50 58L37.2 66.5L42 51.5L30 43H45.2L50 28Z" fill="#c8a951" />
-          </svg>
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-icon">
+          <img src="@/assets/images/logo-pmsp.png" alt="Logo PMESP" />
         </div>
-        <h1>Primeiro Acesso</h1>
-        <p>Você precisa definir uma nova senha antes de continuar.</p>
+        <div class="brand-text">
+          <span class="brand-unit">PMESP • RP</span>
+          <span class="brand-name">Centro de Comando</span>
+        </div>
       </div>
+      <span class="back-link">Protocolo de primeiro acesso</span>
+    </header>
 
-      <!-- User info -->
-      <div class="user-info">
-        <span class="user-label">Usuário</span>
-        <span class="user-name">{{ auth.user?.name }}</span>
-        <span class="user-role">{{ roleLabel }}</span>
+    <div class="layout">
+      <section class="left-col">
+        <div class="status-tag">
+          <span class="status-dot" />
+          TROCA OBRIGATÓRIA DE CREDENCIAL
+        </div>
+        <h1 class="heading">
+          <span class="h-black">Segurança</span>
+          <span class="h-blue">Inicial</span>
+        </h1>
+        <p class="heading-sub">
+          No primeiro acesso, a senha provisória deve ser substituída para habilitar o uso do sistema.
+          A nova credencial ficará vinculada à sua identificação institucional.
+        </p>
+        <ul class="features">
+          <li>Nova senha criptografada e vinculada ao seu cadastro.</li>
+          <li>Validação imediata para liberar os módulos operacionais.</li>
+          <li>Ação auditada para conformidade de acesso.</li>
+        </ul>
+      </section>
+
+      <section class="right-col">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-label">PRIMEIRO ACESSO</span>
+            <span class="card-restricted">RESTRITO</span>
+          </div>
+
+          <h2 class="card-title">Definir nova senha</h2>
+          <p class="card-desc">Finalize a ativação da sua conta para continuar.</p>
+
+          <div class="user-info">
+            <span class="user-label">Usuário</span>
+            <span class="user-name">{{ auth.user?.name }}</span>
+            <span class="user-role">{{ roleLabel }}</span>
+          </div>
+
+          <form @submit.prevent="handleSubmit" novalidate>
+            <div class="field">
+              <label for="newPassword">Nova Senha</label>
+              <div class="input-wrap">
+                <input
+                  id="newPassword"
+                  v-model="form.newPassword"
+                  :type="show.new ? 'text' : 'password'"
+                  placeholder="Mínimo 8 caracteres"
+                  :disabled="loading"
+                  required
+                />
+                <button type="button" class="toggle-pwd" @click="show.new = !show.new">
+                  <EyeIcon :open="show.new" />
+                </button>
+              </div>
+              <div v-if="form.newPassword" class="strength-bar">
+                <div
+                  v-for="i in 4"
+                  :key="i"
+                  class="strength-segment"
+                  :class="{ active: strength >= i, [`level-${strength}`]: strength >= i }"
+                />
+              </div>
+              <p v-if="form.newPassword" class="strength-label" :class="`level-${strength}`">
+                {{ strengthLabel }}
+              </p>
+            </div>
+
+            <div class="field">
+              <label for="confirmPassword">Confirmar Nova Senha</label>
+              <div class="input-wrap">
+                <input
+                  id="confirmPassword"
+                  v-model="form.confirmPassword"
+                  :type="show.confirm ? 'text' : 'password'"
+                  placeholder="Repita a nova senha"
+                  :disabled="loading"
+                  required
+                />
+                <button type="button" class="toggle-pwd" @click="show.confirm = !show.confirm">
+                  <EyeIcon :open="show.confirm" />
+                </button>
+              </div>
+              <p v-if="form.confirmPassword && form.newPassword !== form.confirmPassword" class="hint-error">
+                As senhas não coincidem
+              </p>
+              <p v-if="form.confirmPassword && form.newPassword === form.confirmPassword" class="hint-ok">
+                Senhas coincidem
+              </p>
+            </div>
+
+            <div class="rules">
+              <p class="rules-title">A senha deve conter:</p>
+              <ul>
+                <li :class="{ ok: rules.length }">Mínimo 8 caracteres</li>
+                <li :class="{ ok: rules.upper }">Letra maiúscula</li>
+                <li :class="{ ok: rules.number }">Número</li>
+                <li :class="{ ok: rules.special }">Caractere especial (!@#$%...)</li>
+              </ul>
+            </div>
+
+            <Transition name="alert-fade">
+              <div v-if="error" class="alert-error">{{ error }}</div>
+            </Transition>
+
+            <Transition name="alert-fade">
+              <div v-if="successMsg" class="alert-success">{{ successMsg }}</div>
+            </Transition>
+
+            <button
+              type="submit"
+              class="btn-submit"
+              :disabled="loading || !canSubmit"
+            >
+              <span v-if="loading" class="spinner" />
+              {{ loading ? 'Salvando...' : 'Definir Nova Senha' }}
+            </button>
+          </form>
+
+          <p class="card-footer-line">CANAL CRIPTOGRAFADO • SESSÃO TEMPORÁRIA • CONEXÃO SEGURA</p>
+        </div>
       </div>
-
-      <!-- Form -->
-      <form @submit.prevent="handleSubmit" novalidate>
-        <div class="field">
-          <label for="newPassword">Nova Senha</label>
-          <div class="input-wrap">
-            <input
-              id="newPassword"
-              v-model="form.newPassword"
-              :type="show.new ? 'text' : 'password'"
-              placeholder="Mínimo 8 caracteres"
-              :disabled="loading"
-              required
-            />
-            <button type="button" class="toggle-pwd" @click="show.new = !show.new">
-              <EyeIcon :open="show.new" />
-            </button>
-          </div>
-          <!-- Strength indicator -->
-          <div v-if="form.newPassword" class="strength-bar">
-            <div
-              v-for="i in 4"
-              :key="i"
-              class="strength-segment"
-              :class="{ active: strength >= i, [`level-${strength}`]: strength >= i }"
-            />
-          </div>
-          <p v-if="form.newPassword" class="strength-label" :class="`level-${strength}`">
-            {{ strengthLabel }}
-          </p>
-        </div>
-
-        <div class="field">
-          <label for="confirmPassword">Confirmar Nova Senha</label>
-          <div class="input-wrap">
-            <input
-              id="confirmPassword"
-              v-model="form.confirmPassword"
-              :type="show.confirm ? 'text' : 'password'"
-              placeholder="Repita a nova senha"
-              :disabled="loading"
-              required
-            />
-            <button type="button" class="toggle-pwd" @click="show.confirm = !show.confirm">
-              <EyeIcon :open="show.confirm" />
-            </button>
-          </div>
-          <p v-if="form.confirmPassword && form.newPassword !== form.confirmPassword" class="hint-error">
-            As senhas não coincidem
-          </p>
-          <p v-if="form.confirmPassword && form.newPassword === form.confirmPassword" class="hint-ok">
-            Senhas coincidem
-          </p>
-        </div>
-
-        <!-- Rules -->
-        <div class="rules">
-          <p class="rules-title">A senha deve conter:</p>
-          <ul>
-            <li :class="{ ok: rules.length }">Mínimo 8 caracteres</li>
-            <li :class="{ ok: rules.upper }">Letra maiúscula</li>
-            <li :class="{ ok: rules.number }">Número</li>
-            <li :class="{ ok: rules.special }">Caractere especial (!@#$%...)</li>
-          </ul>
-        </div>
-
-        <Transition name="alert-fade">
-          <div v-if="error" class="alert-error">{{ error }}</div>
-        </Transition>
-
-        <Transition name="alert-fade">
-          <div v-if="successMsg" class="alert-success">{{ successMsg }}</div>
-        </Transition>
-
-        <button
-          type="submit"
-          class="btn-submit"
-          :disabled="loading || !canSubmit"
-        >
-          <span v-if="loading" class="spinner" />
-          {{ loading ? 'Salvando...' : 'Definir Nova Senha' }}
-        </button>
-      </form>
     </div>
   </div>
 </template>
@@ -187,79 +218,218 @@ async function handleSubmit() {
 <style scoped>
 .page {
   min-height: 100vh;
-  background: linear-gradient(135deg, #06091a 0%, #0d1b3e 100%);
+  background: var(--bg-light);
+  display: flex;
+  flex-direction: column;
+}
+
+.topbar {
+  height: 56px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2rem;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+.brand-icon img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+
+.brand-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.brand-unit {
+  font-size: 0.6rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.brand-name {
+  font-size: 0.825rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.back-link {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.layout {
+  flex: 1;
+  display: flex;
+}
+
+.left-col {
+  flex: 1;
+  padding: 3rem 2.75rem 2rem 5rem;
+  background: #eef0f4;
+}
+
+.status-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.3rem 0.875rem;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: #374151;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 1.6rem;
+  background: var(--surface);
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--error);
+}
+
+.heading {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.05;
+  margin-bottom: 1.25rem;
+}
+
+.h-black,
+.h-blue {
+  font-size: 4rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.h-black {
+  color: #0f172a;
+}
+
+.h-blue {
+  color: var(--primary);
+  text-decoration: underline;
+  text-decoration-color: var(--error);
+  text-underline-offset: 8px;
+}
+
+.heading-sub {
+  max-width: 520px;
+  color: #4b5563;
+  line-height: 1.7;
+  margin-bottom: 1.3rem;
+}
+
+.features {
+  list-style: disc;
+  color: #374151;
+  margin-left: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.right-col {
+  width: 500px;
+  padding: 2rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 2rem 1rem;
 }
 
 .card {
-  background: white;
-  border-radius: 20px;
-  padding: 2.5rem;
+  background: var(--surface);
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  padding: 1.5rem;
   width: 100%;
-  max-width: 480px;
-  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
+  max-width: 420px;
+  box-shadow: 0 4px 24px rgb(0 0 0 / 6%);
 }
 
 .card-header {
-  text-align: center;
-  margin-bottom: 1.75rem;
-}
-
-.shield-icon {
   display: flex;
-  justify-content: center;
+  align-items: center;
+  justify-content: space-between;
   margin-bottom: 1rem;
 }
 
-.shield-icon svg {
-  width: 60px;
-  height: auto;
-  filter: drop-shadow(0 4px 12px rgba(26, 58, 107, 0.3));
-}
-
-.card-header h1 {
-  font-size: 1.6rem;
+.card-label {
+  font-size: 0.65rem;
   font-weight: 700;
-  color: #1a3a6b;
-  margin-bottom: 0.4rem;
+  color: var(--text-muted);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
-.card-header p {
-  font-size: 0.875rem;
-  color: #64748b;
+.card-restricted {
+  font-size: 0.65rem;
+  color: var(--error);
+  background: var(--error-bg);
+  border: 1px solid #fecaca;
+  border-radius: 999px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 0.2rem 0.6rem;
+}
+
+.card-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 0.3rem;
+}
+
+.card-desc {
+  font-size: 0.825rem;
+  color: var(--text-muted);
+  margin-bottom: 1rem;
 }
 
 .user-info {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  background: #f0f4f8;
-  border-radius: 10px;
-  padding: 0.875rem 1rem;
-  margin-bottom: 1.75rem;
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
 }
 
 .user-label {
   font-size: 0.75rem;
   font-weight: 600;
   text-transform: uppercase;
-  color: #94a3b8;
+  color: var(--text-muted);
   letter-spacing: 0.05em;
 }
 
 .user-name {
   font-weight: 600;
-  color: #1a3a6b;
+  color: var(--primary);
   flex: 1;
 }
 
 .user-role {
   font-size: 0.75rem;
-  background: #1a3a6b;
-  color: white;
+  background: var(--primary);
+  color: var(--surface);
   padding: 0.2rem 0.6rem;
   border-radius: 999px;
 }
@@ -271,11 +441,11 @@ async function handleSubmit() {
 
 .field label {
   display: block;
-  font-size: 0.8rem;
+  font-size: 0.72rem;
   font-weight: 600;
-  color: #374151;
+  color: #4b5563;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.08em;
   margin-bottom: 0.5rem;
 }
 
@@ -285,23 +455,25 @@ async function handleSubmit() {
 
 .input-wrap input {
   width: 100%;
-  padding: 0.8rem 3rem 0.8rem 1rem;
-  border: 1.5px solid #e2e8f0;
-  border-radius: 10px;
-  font-size: 0.95rem;
-  color: #1e293b;
+  padding: 0.7rem 2.6rem 0.7rem 0.9rem;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  color: var(--text);
   font-family: inherit;
   outline: none;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
 }
 
 .input-wrap input:focus {
-  border-color: #1a3a6b;
-  box-shadow: 0 0 0 3px rgba(26, 58, 107, 0.1);
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgb(37 99 235 / 10%);
+  background: var(--surface);
 }
 
 .input-wrap input:disabled {
-  background: #f8fafc;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
@@ -312,7 +484,7 @@ async function handleSubmit() {
   transform: translateY(-50%);
   background: none;
   border: none;
-  color: #94a3b8;
+  color: var(--text-muted);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -320,7 +492,7 @@ async function handleSubmit() {
 }
 
 .toggle-pwd:hover {
-  color: #1a3a6b;
+  color: #374151;
 }
 
 /* Strength */
@@ -334,7 +506,7 @@ async function handleSubmit() {
   flex: 1;
   height: 4px;
   border-radius: 2px;
-  background: #e2e8f0;
+  background: var(--border);
   transition: background 0.3s;
 }
 
@@ -355,28 +527,31 @@ async function handleSubmit() {
 
 .hint-error {
   font-size: 0.75rem;
-  color: #dc2626;
+  color: var(--error);
   margin-top: 4px;
 }
 
 .hint-ok {
   font-size: 0.75rem;
-  color: #16a34a;
+  color: var(--success);
   margin-top: 4px;
 }
 
 /* Rules */
 .rules {
-  background: #f8fafc;
-  border-radius: 10px;
+  background: #f9fafb;
+  border: 1px solid #f3f4f6;
+  border-radius: 8px;
   padding: 0.875rem 1rem;
   margin-bottom: 1.25rem;
 }
 
 .rules-title {
-  font-size: 0.8rem;
+  font-size: 0.72rem;
   font-weight: 600;
-  color: #374151;
+  color: var(--text-muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   margin-bottom: 0.5rem;
 }
 
@@ -389,7 +564,7 @@ async function handleSubmit() {
 
 .rules li {
   font-size: 0.78rem;
-  color: #94a3b8;
+  color: var(--text-muted);
   padding-left: 1.2rem;
   position: relative;
   transition: color 0.2s;
@@ -403,12 +578,12 @@ async function handleSubmit() {
 }
 
 .rules li.ok {
-  color: #16a34a;
+  color: var(--success);
 }
 
 .rules li.ok::before {
   content: '●';
-  color: #16a34a;
+  color: var(--success);
 }
 
 /* Alerts */
@@ -421,31 +596,30 @@ async function handleSubmit() {
 }
 
 .alert-error {
-  background: #fef2f2;
+  background: var(--error-bg);
   border: 1px solid #fecaca;
-  color: #dc2626;
+  color: var(--error);
 }
 
 .alert-success {
-  background: #f0fdf4;
+  background: var(--success-bg);
   border: 1px solid #bbf7d0;
-  color: #16a34a;
+  color: var(--success);
 }
 
 /* Submit */
 .btn-submit {
   width: 100%;
-  padding: 0.9rem;
-  background: linear-gradient(135deg, #1a3a6b, #0f2347);
-  color: white;
+  padding: 0.75rem;
+  background: #2563eb;
+  color: var(--surface);
   border: none;
-  border-radius: 10px;
-  font-size: 0.95rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
   font-weight: 600;
-  letter-spacing: 0.04em;
   font-family: inherit;
   cursor: pointer;
-  transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
+  transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -453,9 +627,9 @@ async function handleSubmit() {
 }
 
 .btn-submit:hover:not(:disabled) {
-  opacity: 0.9;
+  background: #1d4ed8;
   transform: translateY(-1px);
-  box-shadow: 0 8px 20px rgba(15, 35, 71, 0.3);
+  box-shadow: 0 4px 14px rgb(37 99 235 / 35%);
 }
 
 .btn-submit:disabled {
@@ -466,8 +640,8 @@ async function handleSubmit() {
 .spinner {
   width: 16px;
   height: 16px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-top-color: white;
+  border: 2px solid rgb(255 255 255 / 30%);
+  border-top-color: var(--surface);
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
 }
@@ -484,5 +658,33 @@ async function handleSubmit() {
 .alert-fade-leave-to {
   opacity: 0;
   transform: translateY(-6px);
+}
+
+.card-footer-line {
+  margin-top: 0.9rem;
+  text-align: center;
+  font-size: 0.6rem;
+  color: var(--text-muted);
+  letter-spacing: 0.1em;
+}
+
+@media (max-width: 900px) {
+  .layout {
+    flex-direction: column;
+  }
+
+  .left-col {
+    padding: 2rem 1.5rem 1rem;
+  }
+
+  .h-black,
+  .h-blue {
+    font-size: 2.8rem;
+  }
+
+  .right-col {
+    width: 100%;
+    padding: 1rem 1.5rem 2rem;
+  }
 }
 </style>

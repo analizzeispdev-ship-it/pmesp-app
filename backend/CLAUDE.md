@@ -13,13 +13,17 @@ Event handlers em `server/api/` são finos: validam entrada → chamam serviço 
 
 ```
 server/
-├── api/              → Handlers HTTP finos (sem lógica de negócio)
+├── api/
 │   ├── auth/
 │   │   ├── login.post.ts
 │   │   └── change-password.post.ts
-│   └── users/
-│       ├── index.get.ts
-│       └── index.post.ts
+│   ├── users/
+│   │   ├── index.get.ts
+│   │   └── index.post.ts
+│   └── efetivo/
+│       └── index.get.ts
+├── constants/
+│   └── graduacoes.ts
 ├── services/         → Classes estáticas com toda lógica de negócio (a criar conforme crescimento)
 ├── models/
 │   └── User.ts
@@ -70,18 +74,35 @@ Seta headers CORS para `*`. Responde `204` para `OPTIONS` (preflight).
 - `/api/*` demais → 120 req / min · chave: `ip:api`
 - Seta `X-RateLimit-*` e `Retry-After`. Lança `createError(429)`.
 
+### `server/constants/graduacoes.ts`
+Fonte de verdade para graduações e cargos. Exporta:
+- `GRADUACOES[]` — `{ label, value, nickPrefix, roleName, grupo }`
+- `CARGOS[]` — `{ label, value, description }`
+- `getGraduacao(value)` — busca graduação pelo value
+- `buildDisplayName(name, rg, graduacao)` → `"nickPrefix | nome - rg"`
+
+Graduações: `pm` (✯), `2tenente` (✧), `1tenente` (✧✧), `capitao` (✧✧✧)
+Cargos: `padrao`, `p1` (RH), `p3` (Operacional), `p5` (Comunicação), `estagio`
+
 ### `server/models/User.ts`
 
 Schema Mongoose:
 ```
-username   String  unique, lowercase, trim, required
-password   String  required (bcrypt hash, salt 12)
-name       String  required
-role       'admin' | 'supervisor' | 'officer'  default: 'officer'
-rank       String  default: ''
-badge      String  default: ''
-firstAccess Boolean default: true
-active     Boolean default: true
+username       String   unique, lowercase, trim, required
+password       String   required (bcrypt hash, salt 12)
+name           String   required
+rg             String   default: ''
+role           'admin' | 'supervisor' | 'officer'  default: 'officer'
+cargo          'padrao' | 'p1' | 'p3' | 'p5' | 'estagio'  default: 'padrao'
+graduacao      String   enum de GRADUACAO_VALUES  default: 'pm'
+dataPromocao   Date     default: null
+cursos         [ObjectId]  ref: 'Course'  default: []
+advertencias   [{ descricao, data, aplicadoPor }]  max 3 (validator)  default: []
+patrulhando    Boolean  default: false
+ultimaPatrulha Date     default: null
+badge          String   default: ''
+firstAccess    Boolean  default: true
+active         Boolean  default: true
 timestamps: true
 ```
 Hook `pre('save')`: faz hash bcrypt(12) apenas se `password` foi modificado.
@@ -90,12 +111,12 @@ Export: `const User = mongoose.models.User || mongoose.model('User', UserSchema)
 
 ### `server/plugins/seed.ts`
 Nitro plugin que roda no boot. Cria usuário admin se não existir:
-- username: `admin` | password: `Admin@123` | role: `admin` | firstAccess: `true`
+- username: `admin` | password: `Admin@123` | role: `admin` | cargo: `p1` | graduacao: `capitao` | rg: `00001` | firstAccess: `true`
 
 ### `server/api/auth/login.post.ts`
 `POST /api/auth/login` — público (rate limit cobre)
 Body: `{ username, password }`
-Retorna: `{ token, user: { id, username, name, role, rank, badge, firstAccess } }`
+Retorna: `{ token, user: { id, username, name, rg, role, cargo, graduacao, dataPromocao, patrulhando, badge, firstAccess } }`
 Erro 400 se campos faltando · 401 se inválido · nunca revelar qual campo está errado.
 
 ### `server/api/auth/change-password.post.ts`
@@ -111,9 +132,14 @@ Retorna: `{ success: true, message }`
 Retorna: `{ users: [...] }` sem campo `password` (projeção `{ password: 0 }`).
 Ordenado por `name`.
 
+### `server/api/efetivo/index.get.ts`
+`GET /api/efetivo` — requer Bearer token (qualquer role)
+Retorna: `{ officers: [...] }` com todos os campos exceto `password` e `__v`.
+Ordenado por `name`. Apenas usuários `active: true`.
+
 ### `server/api/users/index.post.ts`
 `POST /api/users` — requer Bearer token · role: `admin`
-Body: `{ username, name, role?, rank?, badge? }`
+Body: `{ username, name, rg?, role?, cargo?, graduacao?, dataPromocao?, badge? }`
 Gera senha temporária aleatória: `Pmesp@XXXXXX`.
 Retorna: `{ user: {...}, tempPassword }` — único momento em que a senha temporária é exposta.
 Erro 409 se username já existe.

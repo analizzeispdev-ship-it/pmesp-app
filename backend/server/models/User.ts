@@ -1,25 +1,61 @@
 import mongoose, { Document, Schema } from 'mongoose'
 import bcrypt from 'bcryptjs'
+import { CARGO_VALUES, GRADUACAO_VALUES } from '../constants/graduacoes'
+
+export interface IAdvertencia {
+  descricao: string
+  data: Date
+  aplicadoPor: mongoose.Types.ObjectId | null
+}
 
 export interface IUser extends Document {
   username: string
   password: string
   name: string
+  rg: string
   role: 'admin' | 'supervisor' | 'officer'
-  rank: string
+  cargo: 'padrao' | 'p1' | 'p3' | 'p5' | 'estagio'
+  graduacao: string
+  dataPromocao: Date | null
+  cursos: mongoose.Types.ObjectId[]
+  advertencias: IAdvertencia[]
+  patrulhando: boolean
   badge: string
   firstAccess: boolean
   active: boolean
   comparePassword(password: string): Promise<boolean>
 }
 
+const AdvertenciaSchema = new Schema<IAdvertencia>(
+  {
+    descricao: { type: String, required: true },
+    data: { type: Date, default: Date.now },
+    aplicadoPor: { type: Schema.Types.ObjectId, ref: 'User', default: null },
+  },
+  { _id: true }
+)
+
 const UserSchema = new Schema<IUser>(
   {
     username: { type: String, required: true, unique: true, lowercase: true, trim: true },
     password: { type: String, required: true },
     name: { type: String, required: true },
+    rg: { type: String, default: '' },
     role: { type: String, enum: ['admin', 'supervisor', 'officer'], default: 'officer' },
-    rank: { type: String, default: '' },
+    cargo: { type: String, enum: CARGO_VALUES, default: 'padrao' },
+    graduacao: { type: String, enum: GRADUACAO_VALUES, default: 'pm' },
+    dataPromocao: { type: Date, default: null },
+    cursos: [{ type: Schema.Types.ObjectId, ref: 'Course' }],
+    advertencias: {
+      type: [AdvertenciaSchema],
+      default: [],
+      validate: {
+        validator: (v: IAdvertencia[]) => v.length <= 3,
+        message: 'Máximo de 3 advertências (PAD) por policial',
+      },
+    },
+    patrulhando: { type: Boolean, default: false },
+    ultimaPatrulha: { type: Date, default: null },
     badge: { type: String, default: '' },
     firstAccess: { type: Boolean, default: true },
     active: { type: Boolean, default: true },

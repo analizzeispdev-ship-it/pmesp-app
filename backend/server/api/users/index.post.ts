@@ -22,7 +22,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 403, message: 'Acesso negado' })
   }
 
-  const { username, name, role, rank, badge } = await readBody(event)
+  const { username, name, rg, role, cargo, graduacao, dataPromocao, badge } = await readBody(event)
 
   if (!username?.trim() || !name?.trim()) {
     throw createError({ statusCode: 400, message: 'Usuário e nome são obrigatórios' })
@@ -38,8 +38,11 @@ export default defineEventHandler(async (event) => {
     username: username.trim().toLowerCase(),
     password: `Pmesp@${randomSuffix}`,
     name: name.trim(),
+    rg: rg?.trim() || '',
     role: role || 'officer',
-    rank: rank?.trim() || '',
+    cargo: cargo || 'padrao',
+    graduacao: graduacao || 'pm',
+    dataPromocao: dataPromocao || null,
     badge: badge?.trim() || '',
     firstAccess: true,
     active: true,
@@ -50,8 +53,12 @@ export default defineEventHandler(async (event) => {
       id: user._id,
       username: user.username,
       name: user.name,
+      rg: user.rg,
       role: user.role,
-      rank: user.rank,
+      cargo: user.cargo,
+      graduacao: user.graduacao,
+      dataPromocao: user.dataPromocao,
+      patrulhando: user.patrulhando,
       badge: user.badge,
       firstAccess: user.firstAccess,
     },

@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { buildDisplayName, getGraduacao } from '../constants/graduacoes'
 
 const TOKEN_KEY = 'pmesp_token'
 const USER_KEY = 'pmesp_user'
@@ -19,6 +20,16 @@ export const useAuthStore = defineStore('auth', {
     isAuthenticated: (state) => !!state.token,
     isAdmin: (state) => state.user?.role === 'admin',
     needsPasswordChange: (state) => !!state.user?.firstAccess,
+
+    displayName: (state) => {
+      if (!state.user) return ''
+      return buildDisplayName(state.user.name, state.user.rg, state.user.graduacao)
+    },
+
+    graduacaoInfo: (state) => {
+      if (!state.user) return null
+      return getGraduacao(state.user.graduacao)
+    },
   },
 
   actions: {

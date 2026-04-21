@@ -19,6 +19,8 @@ Nunca duplicar markup entre views — extrair para componente de layout ou UI.
 src/
 ├── assets/
 │   └── main.css                    → CSS global, variáveis CSS, reset
+├── constants/
+│   └── graduacoes.js               → GRADUACOES[], CARGOS[], getGraduacao(), buildDisplayName()
 ├── components/
 │   ├── ui/                         → Componentes genéricos reutilizáveis
 │   │   ├── BaseButton.vue          → (a criar) variantes: primary, danger, ghost; prop loading
@@ -29,11 +31,17 @@ src/
 │   │   ├── BaseBadge.vue           → (a criar) badge de status/role
 │   │   ├── BaseCard.vue            → (a criar) card com sombra e padding padrão
 │   │   └── BaseTable.vue           → (a criar) tabela paginada com slot de colunas
+│   ├── efetivo/
+│   │   ├── EfetivoTable.vue        → tabela de policiais com avatar, cargo, graduação, PAD, cursos, patrulha
+│   │   ├── PadIndicator.vue        → 3 quadradinhos coloridos (0=vazio, 1=dourado, 2=âmbar, 3=vermelho)
+│   │   ├── CursosBadge.vue         → badge com contagem de cursos ou "—"
+│   │   └── PatrulhaStatus.vue      → badge Em Patrulha/Fora de Serviço + data da última patrulha
 │   └── layout/
-│       ├── AppSidebar.vue          → (a criar) extrair sidebar do DashboardView
-│       └── AppTopbar.vue           → (a criar) extrair topbar do DashboardView
+│       ├── AppSidebar.vue          → sidebar institucional fixa do dashboard
+│       └── AppTopbar.vue           → topbar do dashboard com página, relógio e usuário
 ├── composables/
-│   └── useApi.js                   → wrapper fetch com auth header e tratamento de erros
+│   ├── useApi.js                   → wrapper fetch com auth header e tratamento de erros
+│   └── useClock.js                 → relógio reativo (currentTime, currentDate) com setInterval
 ├── router/
 │   └── index.js                    → rotas + guard beforeEach
 ├── stores/
@@ -41,7 +49,8 @@ src/
 └── views/
     ├── LoginView.vue
     ├── ChangePasswordView.vue
-    └── DashboardView.vue
+    ├── DashboardView.vue
+    └── EfetivoView.vue
 ```
 
 ---
@@ -76,9 +85,17 @@ Reset global (`box-sizing`, `margin`, `padding`). Variáveis CSS:
 --text-muted: #64748b
 --border: #e2e8f0
 ```
-Fonte: `Inter` (Google Fonts via index.html), fallback `Segoe UI`.
+Inclui tokens semânticos adicionais de superfície, texto e feedback (`--surface-soft`, `--surface-subtle`, `--surface-brand-soft`, `--text-strong`, `--text-soft`, `--border-soft`, etc), tokens tipográficos (`--font-family-base`, `--font-family-display`, escala `--fs-*`, pesos `--fw-*`) e suporte a dark mode automático + manual (`@media (prefers-color-scheme: dark)` e `:root[data-theme='dark']`).
+Tipografia padrão atual: `Manrope` + `Inter` como fallback.
 
 ---
+
+### `src/constants/graduacoes.js`
+Espelho do `backend/server/constants/graduacoes.ts` para uso no frontend.
+- `GRADUACOES[]` — `{ label, value, nickPrefix, roleName, grupo }`
+- `CARGOS[]` — `{ label, value, description }`
+- `getGraduacao(value)` — busca graduação pelo value
+- `buildDisplayName(name, rg, graduacao)` → `"nickPrefix | nome - rg"` (ex: `✯ | Hugo Amorim - 5436`)
 
 ### `src/stores/auth.js`
 Store Pinia `auth`. Persiste em `localStorage` (chaves: `pmesp_token`, `pmesp_user`).
@@ -89,6 +106,8 @@ Store Pinia `auth`. Persiste em `localStorage` (chaves: `pmesp_token`, `pmesp_us
 - `isAuthenticated` → `!!token`
 - `isAdmin` → `user.role === 'admin'`
 - `needsPasswordChange` → `!!user.firstAccess`
+- `displayName` → `buildDisplayName(user.name, user.rg, user.graduacao)` — ex: `✯ | Hugo Amorim - 5436`
+- `graduacaoInfo` → objeto completo da graduação atual (`{ label, nickPrefix, roleName, grupo }`)
 
 **Actions:**
 - `setAuth(token, user)` → persiste token e user
@@ -97,10 +116,20 @@ Store Pinia `auth`. Persiste em `localStorage` (chaves: `pmesp_token`, `pmesp_us
 
 **User object:**
 ```js
-{ id, username, name, role, rank, badge, firstAccess }
+{ id, username, name, rg, role, cargo, graduacao, dataPromocao, patrulhando, badge, firstAccess }
 ```
 
 ---
+
+### `src/composables/useClock.js`
+Retorna `{ currentTime, currentDate }` atualizados a cada 1s via `setInterval`.
+Gerencia o ciclo de vida internamente (`onMounted`/`onBeforeUnmount`). Usado em todas as views com topbar.
+
+### `src/stores/efetivo.js`
+Store Pinia `efetivo`. Busca dados via `GET /api/efetivo`.
+**State:** `officers[]`, `loading`, `error`
+**Getters:** `total`, `emPatrulha`, `foraDe`
+**Action:** `fetchAll()` → popula `officers`
 
 ### `src/composables/useApi.js`
 `useApi()` → retorna `{ get, post, put, delete }`.
@@ -119,6 +148,7 @@ Histórico: `createWebHistory()`.
 | `/login` | `Login` | `LoginView` | `public: true` |
 | `/primeiro-acesso` | `ChangePassword` | `ChangePasswordView` | `requiresAuth: true` |
 | `/` | `Dashboard` | `DashboardView` | `requiresAuth: true` |
+| `/efetivo` | `Efetivo` | `EfetivoView` | `requiresAuth: true` |
 
 **Guard `beforeEach`:**
 1. Rota pública → passa
@@ -139,19 +169,47 @@ Em erro 429: `startCountdown(retryAfter)` — botão desabilitado com timer regr
 Responsivo: abaixo de 900px empilha verticalmente.
 
 ### `src/views/ChangePasswordView.vue`
-Tela de primeiro acesso. Card centralizado em fundo escuro.
+Tela de primeiro acesso alinhada ao visual da LoginView.
+- **Topbar institucional:** logo PMESP + "Centro de Comando", com faixa superior branca e borda inferior.
+- **Layout em duas colunas:** esquerda informativa (tag de status, heading grande "Segurança Inicial", orientações) e direita com card de alteração.
+- **Card direito:** label "PRIMEIRO ACESSO", badge "RESTRITO", bloco de usuário, formulário de nova senha e confirma senha, regras e alerts.
 **State local:** `form {newPassword, confirmPassword}`, `show {new, confirm}`, `loading`, `error`, `successMsg`.
 **Computed:** `rules {length, upper, number, special}`, `strength` (0–4), `canSubmit`.
 **Lógica:** `handleSubmit()` → `api.post('/api/auth/change-password')` → `auth.markFirstAccessDone()` → redireciona `/` após 1.5s.
-Exibe: indicador de força da senha (4 segmentos coloridos), checklist de regras, hint de coincidir.
+Exibe: indicador de força da senha (4 segmentos coloridos), checklist de regras, hint de coincidir e rodapé de segurança no padrão da login.
 
 ### `src/views/DashboardView.vue`
-Layout: sidebar fixa (colapsável) + área principal (topbar + conteúdo).
-**State local:** `sidebarCollapsed`, `currentTime`, `currentDate` (relógio atualizado a cada 1s via `setInterval`).
+Layout: sidebar fixa + área principal (topbar + conteúdo), com linguagem visual unificada com a LoginView.
+**Composables:** usa `useClock()` para relógio reativo.
 **Computed:** `firstName`, `initials` (2 letras do nome), `roleLabel`, `greeting` (bom dia/tarde/noite).
-**Sidebar:** shield PMESP, navegação (Dashboard ativo; Efetivo, Ocorrências, Viaturas, Relatórios, Configurações marcados como "Em breve"), avatar do usuário, botão logout.
-**Conteúdo:** banner de boas-vindas, 4 cards de stats (placeholder `—`), info box de sistema em implantação.
+**Composição:** usa `AppSidebar` e `AppTopbar` para reduzir markup da view e centralizar layout institucional.
+**Sidebar:** fixa, tema claro com bordas sutis, navegação com estado ativo em azul institucional, itens "Em breve", avatar do usuário e logout.
+**Topbar:** metadados da página, relógio e usuário logado.
+**Conteúdo:** banner de boas-vindas em card claro, 4 cards de stats (placeholder `—`) e info box de implantação com estilo institucional claro.
 **Logout:** `auth.logout()` → `router.push('/login')`.
+
+### `src/components/layout/AppSidebar.vue`
+Sidebar institucional fixa do dashboard.
+- Recebe `currentPath`, `isAdmin`, `initials`, `userName`, `userRank`.
+- Emite `logout`.
+- Exibe branding PMESP, grupos de navegação, itens desabilitados "Em breve" e rodapé do usuário.
+- Cores e tipografia aplicadas por variáveis CSS globais (tokens), sem valores fixos de tema.
+
+### `src/views/EfetivoView.vue`
+Layout idêntico ao Dashboard (sidebar + topbar + content). Usa `useClock()` e `useEfetivoStore`.
+- Toolbar com busca por nome/RG, filtro de cargo e filtro de status de patrulha (client-side).
+- 3 stat cards: Total do Efetivo, Em Patrulha, Fora de Serviço.
+- Renderiza `EfetivoTable` com `filteredOfficers` e estado `loading`.
+- Exibe `error-bar` quando `efetivo.error` está preenchido.
+- Carrega dados via `efetivo.fetchAll()` no `onMounted`.
+
+### `src/components/layout/AppTopbar.vue`
+Topbar de dashboard.
+- Recebe `title`, `breadcrumb`, `currentDate`, `currentTime`, `initials`, `userName`, `roleLabel`.
+- Exibe cabeçalho de página, botão de alternância de tema ("Tema escuro"/"Tema claro"), relógio e avatar do usuário.
+- Ao passar o mouse sobre o avatar (hover), abre mini modal/dropdown com nome e informação de perfil; fecha ao tirar o mouse.
+- Botão de tema persiste preferência em `localStorage` (`pmesp_theme`) e aplica via `data-theme` no `documentElement`.
+- Cores e tipografia aplicadas por variáveis CSS globais (tokens), com suporte a dark mode.
 
 ---
 
@@ -181,6 +239,7 @@ Layout: sidebar fixa (colapsável) + área principal (topbar + conteúdo).
 ## Breakpoint responsivo
 
 Principal: `768px`. Mobile-first. Sidebar colapsa automaticamente abaixo de 768px.
+No dashboard atual a sidebar não possui mais modo recolhido/expandido; em telas menores o layout empilha verticalmente.
 
 ## Dependências atuais
 
