@@ -19,9 +19,19 @@
 
 ## Subir o projeto
 
+### Desenvolvimento (hot-reload automático)
 ```bash
-cp .env.example .env          # apenas na primeira vez
-docker-compose up --build     # build + start de todos os containers
+cp .env.example .env                        # apenas na primeira vez
+docker-compose -f docker-compose.dev.yml up # sobe com HMR — salvar arquivo já reflete
+```
+- Frontend e backend ficam assistindo os arquivos via volume montado.
+- `node_modules` ficam em volumes isolados no container (não conflita com o host).
+- Alterar qualquer arquivo em `frontend/src/` ou `backend/server/` já recarrega automaticamente.
+- Na **primeira vez** demora um pouco (instala dependências). Nas próximas é imediato.
+
+### Produção
+```bash
+docker-compose up --build     # build completo + Nginx + imagem otimizada
 docker-compose up             # sem rebuild (depois do primeiro build)
 ```
 
@@ -102,13 +112,16 @@ Frontend: botão de login fica bloqueado com countdown regressivo visível.
 
 ---
 
-## Docker Compose — serviços
+## Docker Compose — arquivos
 
-```
-mongo    → mongo:7, volume mongo_data, rede pmesp_network
-backend  → build ./backend, depende de mongo
-frontend → build ./frontend (ARG VITE_API_URL), depende de backend, servido por Nginx
-```
+| Arquivo | Uso | Característica |
+|---------|-----|----------------|
+| `docker-compose.yml` | Produção | Build com Dockerfile, Nginx, imagem otimizada |
+| `docker-compose.dev.yml` | Desenvolvimento | Volume mount, HMR, `npm run dev` direto |
+
+**dev:** `node:20-alpine` com volumes `./backend:/app` e `./frontend:/app`. node_modules em volumes nomeados separados (`backend_node_modules`, `frontend_node_modules`) para não conflitar com host.
+**polling:** `usePolling: true` + `interval: 300ms` no Vite e Nuxt — necessário para file-watching funcionar em volumes Docker no Windows.
+**NUXT_HOST=0.0.0.0** e **NUXT_PORT=4000** injetados via env no dev compose para o servidor escutar em todas as interfaces.
 
 ---
 

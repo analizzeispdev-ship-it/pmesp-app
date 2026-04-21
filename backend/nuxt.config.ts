@@ -6,6 +6,15 @@ export default defineNuxtConfig({
     devProxy: {},
   },
 
+  vite: {
+    server: {
+      watch: {
+        usePolling: true,   // obrigatório para HMR em volume Docker no Windows
+        interval: 300,
+      },
+    },
+  },
+
   runtimeConfig: {
     mongoUri: '',
     jwtSecret: '',

@@ -129,11 +129,14 @@ Histórico: `createWebHistory()`.
 ---
 
 ### `src/views/LoginView.vue`
-Layout split: painel esquerdo (brand azul escuro + shield SVG PMESP) · painel direito (formulário).
+**Design baseado no Figma PMESP-Site (node 4:5).** Layout institucional claro.
+- **Topbar:** fundo branco, borda-bottom, logo PMESP + "Centro de Comando" à esquerda, "← Voltar à institucional" à direita.
+- **Coluna esquerda:** fundo #eef0f4, badge "SISTEMA EM PRONTIDÃO" (vermelho + borda), heading gigante "Acesso" (preto #0f172a 4.5rem) + "Institucional" (azul #1a3a6b 4.5rem com underline vermelho), subtítulo cinza, 3 features com ícones circulares. Radar decorativo (SVG: círculos concêntricos + linhas + 3 pontos vermelhos) posicionado absolutamente no canto inferior direito da coluna. Badge/shield PMESP no centro do radar.
+- **Coluna direita (card):** fundo branco, borda #e5e7eb, border-radius 12px, sombra leve. Topo: "AUTENTICAÇÃO" (cinza, uppercase) + badge "⚠ RESTRITO" (vermelho). Título "Identificação oficial". Subtítulo. Form: input usuário + input senha (com toggle visibilidade). Botão azul #2563eb "Entrar no Sistema" com ícone cadeado. Seção "VERIFICAÇÃO AUTOMÁTICA" com 3 bullets. Aviso legal em caixa #f9fafb. Footer "CANAL CRIPTOGRAFADO • SESSÃO TEMPORÁRIA • CONEXÃO SEGURA".
 **State local:** `form {username, password}`, `loading`, `error`, `showPwd`, `blocked` (countdown 429).
 **Lógica:** `handleLogin()` → `api.post('/api/auth/login')` → `auth.setAuth()` → redireciona.
-Em erro 429: `startCountdown(retryAfter)` — botão fica desabilitado com timer regressivo visível.
-Responsivo: abaixo de 768px empilha verticalmente.
+Em erro 429: `startCountdown(retryAfter)` — botão desabilitado com timer regressivo visível.
+Responsivo: abaixo de 900px empilha verticalmente.
 
 ### `src/views/ChangePasswordView.vue`
 Tela de primeiro acesso. Card centralizado em fundo escuro.

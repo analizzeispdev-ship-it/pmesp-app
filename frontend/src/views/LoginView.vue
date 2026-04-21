@@ -1,105 +1,148 @@
 <template>
-  <div class="login-page">
-    <div class="login-container">
-      <!-- Painel esquerdo: identidade visual -->
-      <div class="brand-panel">
-        <div class="brand-content">
-          <div class="shield-wrap">
-            <svg class="shield-svg" viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg">
-              <path
-                d="M50 4L6 24V60C6 86 26 107 50 118C74 107 94 86 94 60V24L50 4Z"
-                fill="#0f2347"
-                stroke="#c8a951"
-                stroke-width="2.5"
-              />
-              <path
-                d="M50 4L6 24V60C6 86 26 107 50 118C74 107 94 86 94 60V24L50 4Z"
-                fill="url(#shieldGrad)"
-              />
-              <defs>
-                <linearGradient id="shieldGrad" x1="0" y1="0" x2="100" y2="120" gradientUnits="userSpaceOnUse">
-                  <stop offset="0%" stop-color="#1a3a6b" />
-                  <stop offset="100%" stop-color="#0a1a3a" />
-                </linearGradient>
-              </defs>
-              <path
-                d="M50 28L54.8 43H70L58 51.5L62.8 66.5L50 58L37.2 66.5L42 51.5L30 43H45.2L50 28Z"
-                fill="#c8a951"
-              />
-              <line x1="22" y1="82" x2="78" y2="82" stroke="#c8a951" stroke-width="1" opacity="0.4" />
-              <text x="50" y="95" text-anchor="middle" fill="#c8a951" font-size="7.5" font-family="serif" letter-spacing="3" opacity="0.9">PMESP</text>
-            </svg>
+  <div class="page">
+
+    <!-- Topbar -->
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg">
+            <path d="M50 4L6 24V60C6 86 26 107 50 118C74 107 94 86 94 60V24L50 4Z" fill="#1a3a6b"/>
+            <path d="M50 28L54.8 43H70L58 51.5L62.8 66.5L50 58L37.2 66.5L42 51.5L30 43H45.2L50 28Z" fill="#c8a951"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <span class="brand-unit">PMESP • RP</span>
+          <span class="brand-name">Centro de Comando</span>
+        </div>
+      </div>
+      <span class="back-link">← Voltar à institucional</span>
+    </header>
+
+    <!-- Layout principal -->
+    <div class="layout">
+
+      <!-- Coluna esquerda -->
+      <div class="left-col">
+        <div class="left-content">
+          <div class="status-tag">
+            <span class="status-dot" />
+            SISTEMA EM PRONTIDÃO
           </div>
 
-          <h1 class="brand-title">PMESP</h1>
-          <p class="brand-name">Polícia Militar do Estado de São Paulo</p>
+          <h1 class="heading">
+            <span class="h-black">Acesso</span>
+            <span class="h-blue">Institucional</span>
+          </h1>
 
-          <div class="brand-divider" />
+          <p class="heading-sub">
+            Autenticação restrita ao efetivo autorizado da Polícia Militar Brasileira.
+            Seu vínculo é validado diretamente no sistema institucional do comando.
+          </p>
 
-          <p class="brand-desc">Sistema Integrado de Gerenciamento Policial</p>
-
-          <div class="brand-badges">
-            <span class="badge-tag">RP</span>
-            <span class="badge-tag">v1.0</span>
-          </div>
+          <ul class="features">
+            <li class="feature-item">
+              <span class="feature-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                </svg>
+              </span>
+              <span>Validação automática de pertencimento à corporação</span>
+            </li>
+            <li class="feature-item">
+              <span class="feature-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="11" width="18" height="11" rx="2" />
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                </svg>
+              </span>
+              <span>Canal seguro com autenticação via credenciais institucionais</span>
+            </li>
+            <li class="feature-item">
+              <span class="feature-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                </svg>
+              </span>
+              <span>Funcional e patente atribuídos após aprovação</span>
+            </li>
+          </ul>
         </div>
 
-        <div class="brand-circles">
-          <div class="circle c1" />
-          <div class="circle c2" />
+        <!-- Radar decorativo -->
+        <div class="radar-wrap">
+          <svg class="radar-svg" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="200" cy="200" r="188" fill="none" stroke="#d9dee6" stroke-width="1" />
+            <circle cx="200" cy="200" r="148" fill="none" stroke="#d9dee6" stroke-width="1" />
+            <circle cx="200" cy="200" r="108" fill="none" stroke="#d9dee6" stroke-width="1" />
+            <circle cx="200" cy="200" r="68"  fill="none" stroke="#d9dee6" stroke-width="1" />
+            <circle cx="200" cy="200" r="30"  fill="none" stroke="#d9dee6" stroke-width="1" />
+            <line x1="200" y1="12"  x2="200" y2="388" stroke="#d9dee6" stroke-width="0.5" />
+            <line x1="12"  y1="200" x2="388" y2="200" stroke="#d9dee6" stroke-width="0.5" />
+            <line x1="67"  y1="67"  x2="333" y2="333" stroke="#d9dee6" stroke-width="0.5" />
+            <line x1="333" y1="67"  x2="67"  y2="333" stroke="#d9dee6" stroke-width="0.5" />
+            <circle cx="290" cy="142" r="4.5" fill="#dc2626" />
+            <circle cx="148" cy="258" r="3.5" fill="#dc2626" />
+            <circle cx="318" cy="272" r="3"   fill="#dc2626" />
+          </svg>
+          <div class="radar-badge">
+            <svg viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg">
+              <path d="M50 4L6 24V60C6 86 26 107 50 118C74 107 94 86 94 60V24L50 4Z" fill="#0f2347" stroke="#c8a951" stroke-width="2.5" />
+              <path d="M50 28L54.8 43H70L58 51.5L62.8 66.5L50 58L37.2 66.5L42 51.5L30 43H45.2L50 28Z" fill="#c8a951" />
+            </svg>
+          </div>
         </div>
       </div>
 
-      <!-- Painel direito: formulário de login -->
-      <div class="form-panel">
-        <div class="form-card">
-          <div class="form-header">
-            <h2>Acesso ao Sistema</h2>
-            <p>Insira suas credenciais para continuar</p>
+      <!-- Coluna direita: card de autenticação -->
+      <div class="right-col">
+        <div class="auth-card">
+
+          <!-- Topo do card -->
+          <div class="card-top">
+            <span class="card-label">AUTENTICAÇÃO</span>
+            <span class="card-restricted">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                <line x1="12" y1="9" x2="12" y2="13" />
+                <line x1="12" y1="17" x2="12.01" y2="17" />
+              </svg>
+              RESTRITO
+            </span>
           </div>
 
-          <form @submit.prevent="handleLogin" novalidate>
+          <h2 class="card-title">Identificação oficial</h2>
+          <p class="card-desc">
+            Entre com suas credenciais institucionais para prosseguir com a autenticação.
+          </p>
+
+          <!-- Formulário -->
+          <form @submit.prevent="handleLogin" novalidate class="form">
             <div class="field">
-              <label for="username">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                  <circle cx="12" cy="7" r="4" />
-                </svg>
-                Usuário
-              </label>
               <input
-                id="username"
                 v-model="form.username"
                 type="text"
-                placeholder="Digite seu usuário"
+                class="input"
+                placeholder="Usuário institucional"
                 autocomplete="username"
                 required
-                :disabled="loading"
+                :disabled="loading || blocked > 0"
               />
             </div>
 
             <div class="field">
-              <label for="password">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                </svg>
-                Senha
-              </label>
               <div class="input-wrap">
                 <input
-                  id="password"
                   v-model="form.password"
                   :type="showPwd ? 'text' : 'password'"
-                  placeholder="Digite sua senha"
+                  class="input"
+                  placeholder="Senha"
                   autocomplete="current-password"
                   required
-                  :disabled="loading"
+                  :disabled="loading || blocked > 0"
                 />
-                <button type="button" class="toggle-pwd" @click="showPwd = !showPwd" :aria-label="showPwd ? 'Ocultar senha' : 'Mostrar senha'">
+                <button type="button" class="toggle-pwd" @click="showPwd = !showPwd">
                   <svg v-if="!showPwd" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                    <circle cx="12" cy="12" r="3" />
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" />
                   </svg>
                   <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
@@ -112,26 +155,42 @@
 
             <Transition name="alert-fade">
               <div v-if="error" class="alert-error" role="alert">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <circle cx="12" cy="12" r="10" />
-                  <line x1="12" y1="8" x2="12" y2="12" />
-                  <line x1="12" y1="16" x2="12.01" y2="16" />
-                </svg>
-                <span>
-                  {{ error }}
-                  <strong v-if="blocked > 0"> ({{ blocked }}s)</strong>
-                </span>
+                {{ error }}<strong v-if="blocked > 0"> ({{ blocked }}s)</strong>
               </div>
             </Transition>
 
-            <button type="submit" class="btn-submit" :disabled="loading || blocked > 0 || !form.username || !form.password">
+            <button
+              type="submit"
+              class="btn-submit"
+              :disabled="loading || blocked > 0 || !form.username || !form.password"
+            >
               <span v-if="loading" class="spinner" />
-              <span>{{ loading ? 'Verificando...' : blocked > 0 ? `Bloqueado (${blocked}s)` : 'Entrar' }}</span>
+              <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="11" width="18" height="11" rx="2" />
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              </svg>
+              <span>{{ loading ? 'Verificando...' : blocked > 0 ? `Bloqueado (${blocked}s)` : 'Entrar no Sistema' }}</span>
             </button>
           </form>
 
-          <p class="form-footer">
-            Problemas no acesso? Contate o administrador do sistema.
+          <!-- Verificação automática -->
+          <div class="verification">
+            <span class="ver-label">VERIFICAÇÃO AUTOMÁTICA</span>
+            <ul class="ver-list">
+              <li>Suas credenciais serão <strong>verificadas</strong> no banco de dados institucional.</li>
+              <li>Só é permitido acesso a membros <strong>ativos</strong> da corporação.</li>
+              <li>Novos usuários ficam <strong>pendentes</strong> até a aprovação do comando.</li>
+            </ul>
+          </div>
+
+          <!-- Aviso legal -->
+          <div class="card-warning">
+            Acesso monitorado e auditado. Uso indevido, compartilhamento de credenciais ou tentativas de invasão estão sujeitos às sanções previstas no regulamento disciplinar.
+          </div>
+
+          <!-- Footer do card -->
+          <p class="card-footer-line">
+            CANAL CRIPTOGRAFADO • SESSÃO TEMPORÁRIA • CONEXÃO SEGURA
           </p>
         </div>
       </div>
@@ -153,7 +212,7 @@ const form = reactive({ username: '', password: '' })
 const loading = ref(false)
 const error = ref('')
 const showPwd = ref(false)
-const blocked = ref(0) // segundos restantes de bloqueio
+const blocked = ref(0)
 
 let countdownTimer = null
 
@@ -185,8 +244,7 @@ async function handleLogin() {
     router.push(user.firstAccess ? '/primeiro-acesso' : '/')
   } catch (err) {
     if (err.status === 429) {
-      const wait = parseInt(err.retryAfter || '60', 10)
-      startCountdown(wait)
+      startCountdown(parseInt(err.retryAfter || '60', 10))
       error.value = err.message
     } else {
       error.value = err.message || 'Erro ao realizar login'
@@ -198,216 +256,346 @@ async function handleLogin() {
 </script>
 
 <style scoped>
-.login-page {
+/* ── Página ── */
+.page {
   min-height: 100vh;
+  background: #eef0f4;
+  display: flex;
+  flex-direction: column;
+  font-family: 'Inter', 'Segoe UI', sans-serif;
+}
+
+/* ── Topbar ── */
+.topbar {
+  height: 56px;
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
   display: flex;
   align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, #06091a 0%, #0d1b3e 50%, #06091a 100%);
-  padding: 1rem;
+  justify-content: space-between;
+  padding: 0 2rem;
+  flex-shrink: 0;
 }
 
-.login-container {
-  display: flex;
-  width: 100%;
-  max-width: 1000px;
-  min-height: 600px;
-  border-radius: 20px;
-  overflow: hidden;
-  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(200, 169, 81, 0.1);
-}
-
-/* ── Brand panel ── */
-.brand-panel {
-  flex: 1;
-  background: linear-gradient(160deg, #1a3a6b 0%, #0a1f45 60%, #060f28 100%);
+.brand {
   display: flex;
   align-items: center;
-  justify-content: center;
-  padding: 3rem 2.5rem;
-  position: relative;
-  overflow: hidden;
+  gap: 0.625rem;
 }
 
-.brand-circles {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-
-.circle {
-  position: absolute;
-  border-radius: 50%;
-  background: rgba(200, 169, 81, 0.04);
-}
-
-.c1 {
-  width: 420px;
-  height: 420px;
-  top: -140px;
-  left: -140px;
-}
-
-.c2 {
-  width: 320px;
-  height: 320px;
-  bottom: -80px;
-  right: -80px;
-  background: rgba(255, 255, 255, 0.02);
-}
-
-.brand-content {
-  position: relative;
-  z-index: 1;
-  text-align: center;
-  color: white;
-}
-
-.shield-wrap {
-  margin-bottom: 1.5rem;
-  display: flex;
-  justify-content: center;
-}
-
-.shield-svg {
-  width: 110px;
+.brand-icon {
+  width: 28px;
   height: auto;
-  filter: drop-shadow(0 6px 20px rgba(200, 169, 81, 0.35));
+  display: flex;
+  align-items: center;
 }
 
-.brand-title {
-  font-size: 3.25rem;
-  font-weight: 800;
-  letter-spacing: 0.4em;
-  color: #c8a951;
-  text-shadow: 0 2px 16px rgba(200, 169, 81, 0.25);
-  margin-bottom: 0.5rem;
+.brand-icon svg {
+  width: 28px;
+  height: auto;
+}
+
+.brand-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.brand-unit {
+  font-size: 0.6rem;
+  font-weight: 600;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
   line-height: 1;
 }
 
 .brand-name {
-  font-size: 0.78rem;
-  color: rgba(255, 255, 255, 0.65);
-  letter-spacing: 0.04em;
-  margin-bottom: 2rem;
-  line-height: 1.5;
+  font-size: 0.825rem;
+  font-weight: 600;
+  color: #111827;
+  line-height: 1.3;
 }
 
-.brand-divider {
-  width: 50px;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, #c8a951, transparent);
-  margin: 0 auto 2rem;
-}
-
-.brand-desc {
+.back-link {
   font-size: 0.8rem;
-  color: rgba(255, 255, 255, 0.4);
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  margin-bottom: 2rem;
+  color: #6b7280;
+  cursor: pointer;
+  transition: color 0.15s;
 }
 
-.brand-badges {
-  display: flex;
-  justify-content: center;
-  gap: 0.5rem;
+.back-link:hover {
+  color: #111827;
 }
 
-.badge-tag {
-  padding: 0.25rem 0.75rem;
-  background: rgba(200, 169, 81, 0.12);
-  border: 1px solid rgba(200, 169, 81, 0.25);
-  border-radius: 999px;
-  font-size: 0.7rem;
-  color: #c8a951;
-  letter-spacing: 0.1em;
-}
-
-/* ── Form panel ── */
-.form-panel {
+/* ── Layout ── */
+.layout {
   flex: 1;
-  background: #f8fafc;
+  display: flex;
+  overflow: hidden;
+}
+
+/* ── Coluna esquerda ── */
+.left-col {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  padding: 4rem 3rem 3rem 5rem;
+  overflow: hidden;
+}
+
+.left-content {
+  position: relative;
+  z-index: 2;
+  max-width: 520px;
+}
+
+/* Status tag */
+.status-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 999px;
+  padding: 0.3rem 0.875rem;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: #374151;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 1.75rem;
+  background: white;
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #dc2626;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.2);
+}
+
+/* Heading */
+.heading {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.05;
+  margin-bottom: 1.5rem;
+}
+
+.h-black {
+  font-size: 4.5rem;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+}
+
+.h-blue {
+  font-size: 4.5rem;
+  font-weight: 800;
+  color: #1a3a6b;
+  letter-spacing: -0.02em;
+  text-decoration: underline;
+  text-decoration-color: #dc2626;
+  text-underline-offset: 10px;
+  text-decoration-thickness: 4px;
+}
+
+/* Subtítulo */
+.heading-sub {
+  font-size: 0.9rem;
+  color: #4b5563;
+  line-height: 1.7;
+  margin-bottom: 2rem;
+  max-width: 420px;
+}
+
+/* Features */
+.features {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.feature-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.85rem;
+  color: #374151;
+}
+
+.feature-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 3rem 2.5rem;
+  flex-shrink: 0;
+  color: #6b7280;
 }
 
-.form-card {
+.feature-icon svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* ── Radar ── */
+.radar-wrap {
+  position: absolute;
+  bottom: -60px;
+  left: 50%;
+  transform: translateX(-20%);
+  width: 460px;
+  height: 460px;
+  z-index: 1;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.radar-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.radar-badge {
+  position: relative;
+  z-index: 2;
+  width: 72px;
+  height: auto;
+  opacity: 0.85;
+}
+
+.radar-badge svg {
+  width: 72px;
+  height: auto;
+}
+
+/* ── Coluna direita ── */
+.right-col {
+  width: 460px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 3rem 2rem 1rem;
+}
+
+/* ── Card ── */
+.auth-card {
   width: 100%;
   max-width: 400px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
 }
 
-.form-header {
-  margin-bottom: 2rem;
-}
-
-.form-header h2 {
-  font-size: 1.8rem;
-  font-weight: 700;
-  color: #1a3a6b;
-  margin-bottom: 0.4rem;
-}
-
-.form-header p {
-  font-size: 0.875rem;
-  color: #64748b;
-}
-
-/* Fields */
-.field {
+.card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   margin-bottom: 1.25rem;
 }
 
-.field label {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: #374151;
-  margin-bottom: 0.5rem;
+.card-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #9ca3af;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
 }
 
-.field label svg {
-  width: 14px;
-  height: 14px;
-  color: #1a3a6b;
-  flex-shrink: 0;
+.card-restricted {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #dc2626;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 999px;
+  padding: 0.2rem 0.6rem;
+  letter-spacing: 0.08em;
 }
 
-.field input {
+.card-restricted svg {
+  width: 11px;
+  height: 11px;
+}
+
+.card-title {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 0.4rem;
+  letter-spacing: -0.01em;
+}
+
+.card-desc {
+  font-size: 0.825rem;
+  color: #6b7280;
+  line-height: 1.6;
+  margin-bottom: 1.25rem;
+}
+
+/* ── Form ── */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.field {
   width: 100%;
-  padding: 0.8rem 1rem;
-  border: 1.5px solid #e2e8f0;
-  border-radius: 10px;
-  font-size: 0.95rem;
-  color: #1e293b;
-  background: white;
-  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.input {
+  width: 100%;
+  padding: 0.7rem 0.875rem;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  color: #111827;
+  font-family: inherit;
   outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
 
-.field input:focus {
-  border-color: #1a3a6b;
-  box-shadow: 0 0 0 3px rgba(26, 58, 107, 0.1);
+.input::placeholder {
+  color: #9ca3af;
 }
 
-.field input:disabled {
-  background: #f1f5f9;
+.input:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  background: #ffffff;
+}
+
+.input:disabled {
+  opacity: 0.5;
   cursor: not-allowed;
-  opacity: 0.6;
 }
 
 .input-wrap {
   position: relative;
 }
 
-.input-wrap input {
-  padding-right: 3rem;
+.input-wrap .input {
+  padding-right: 2.75rem;
 }
 
 .toggle-pwd {
@@ -417,65 +605,61 @@ async function handleLogin() {
   transform: translateY(-50%);
   background: none;
   border: none;
-  color: #94a3b8;
-  padding: 0.25rem;
+  color: #9ca3af;
+  cursor: pointer;
   display: flex;
   align-items: center;
+  padding: 0;
   transition: color 0.15s;
 }
 
 .toggle-pwd:hover {
-  color: #1a3a6b;
+  color: #374151;
 }
 
 .toggle-pwd svg {
-  width: 18px;
-  height: 18px;
+  width: 17px;
+  height: 17px;
 }
 
 /* Alert */
 .alert-error {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1rem;
+  padding: 0.625rem 0.875rem;
   background: #fef2f2;
   border: 1px solid #fecaca;
-  border-radius: 8px;
+  border-radius: 6px;
+  font-size: 0.8rem;
   color: #dc2626;
-  font-size: 0.875rem;
-  margin-bottom: 1rem;
-}
-
-.alert-error svg {
-  width: 16px;
-  height: 16px;
-  flex-shrink: 0;
 }
 
 /* Submit button */
 .btn-submit {
   width: 100%;
-  padding: 0.9rem;
-  background: linear-gradient(135deg, #1a3a6b, #0f2347);
+  padding: 0.75rem;
+  background: #2563eb;
   color: white;
   border: none;
-  border-radius: 10px;
-  font-size: 0.95rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
   font-weight: 600;
-  letter-spacing: 0.05em;
-  transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
+  font-family: inherit;
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  margin-top: 0.5rem;
+  transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+}
+
+.btn-submit svg {
+  width: 16px;
+  height: 16px;
 }
 
 .btn-submit:hover:not(:disabled) {
-  opacity: 0.92;
+  background: #1d4ed8;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
   transform: translateY(-1px);
-  box-shadow: 0 8px 20px rgba(15, 35, 71, 0.3);
 }
 
 .btn-submit:active:not(:disabled) {
@@ -483,13 +667,13 @@ async function handleLogin() {
 }
 
 .btn-submit:disabled {
-  opacity: 0.5;
+  opacity: 0.45;
   cursor: not-allowed;
 }
 
 .spinner {
-  width: 16px;
-  height: 16px;
+  width: 15px;
+  height: 15px;
   border: 2px solid rgba(255, 255, 255, 0.3);
   border-top-color: white;
   border-radius: 50%;
@@ -501,47 +685,111 @@ async function handleLogin() {
   to { transform: rotate(360deg); }
 }
 
-.form-footer {
-  margin-top: 1.75rem;
-  text-align: center;
-  font-size: 0.78rem;
-  color: #94a3b8;
+/* ── Verificação ── */
+.verification {
+  margin-bottom: 1rem;
+}
+
+.ver-label {
+  display: block;
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: #9ca3af;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 0.6rem;
+}
+
+.ver-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.ver-list li {
+  font-size: 0.775rem;
+  color: #374151;
+  padding-left: 1rem;
+  position: relative;
   line-height: 1.5;
 }
 
-/* Transition */
+.ver-list li::before {
+  content: '•';
+  position: absolute;
+  left: 0;
+  color: #9ca3af;
+}
+
+.ver-list strong {
+  color: #111827;
+  font-weight: 600;
+}
+
+/* ── Aviso ── */
+.card-warning {
+  background: #f9fafb;
+  border: 1px solid #f3f4f6;
+  border-radius: 6px;
+  padding: 0.75rem;
+  font-size: 0.72rem;
+  color: #6b7280;
+  line-height: 1.6;
+  margin-bottom: 1rem;
+}
+
+/* ── Footer do card ── */
+.card-footer-line {
+  text-align: center;
+  font-size: 0.6rem;
+  color: #9ca3af;
+  letter-spacing: 0.1em;
+  font-weight: 500;
+}
+
+/* ── Transitions ── */
 .alert-fade-enter-active,
 .alert-fade-leave-active {
-  transition: all 0.25s ease;
+  transition: all 0.2s ease;
 }
 .alert-fade-enter-from,
 .alert-fade-leave-to {
   opacity: 0;
-  transform: translateY(-6px);
+  transform: translateY(-4px);
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .login-container {
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .layout {
     flex-direction: column;
-    max-width: 480px;
+    overflow: auto;
   }
 
-  .brand-panel {
-    padding: 2.5rem 2rem;
-    min-height: 280px;
+  .left-col {
+    padding: 2.5rem 2rem 12rem;
+    min-height: 420px;
   }
 
-  .shield-svg {
-    width: 80px;
+  .h-black, .h-blue {
+    font-size: 3rem;
   }
 
-  .brand-title {
-    font-size: 2.25rem;
+  .right-col {
+    width: 100%;
+    padding: 0 1.5rem 2.5rem;
   }
 
-  .form-panel {
-    padding: 2rem 1.5rem;
+  .auth-card {
+    max-width: 100%;
+  }
+
+  .radar-wrap {
+    width: 340px;
+    height: 340px;
+    bottom: -40px;
+    left: 50%;
+    transform: translateX(-50%);
   }
 }
 </style>

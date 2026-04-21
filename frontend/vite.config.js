@@ -12,5 +12,9 @@ export default defineConfig({
   server: {
     port: 3000,
     host: true,
+    watch: {
+      usePolling: true,   // obrigatório para HMR funcionar em volume Docker no Windows
+      interval: 300,
+    },
   },
 })
