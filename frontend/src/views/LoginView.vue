@@ -1,14 +1,13 @@
 <template>
   <div class="page">
 
+    <div ref="scanLineEl" class="scan-line" aria-hidden="true" />
+
     <!-- Topbar -->
     <header class="topbar">
       <div class="brand">
         <div class="brand-icon">
-          <svg viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg">
-            <path d="M50 4L6 24V60C6 86 26 107 50 118C74 107 94 86 94 60V24L50 4Z" fill="#1a3a6b"/>
-            <path d="M50 28L54.8 43H70L58 51.5L62.8 66.5L50 58L37.2 66.5L42 51.5L30 43H45.2L50 28Z" fill="#c8a951"/>
-          </svg>
+          <img src="@/assets/images/logo-pmsp.png" alt="Logo PMESP" />
         </div>
         <div class="brand-text">
           <span class="brand-unit">PMESP • RP</span>
@@ -71,24 +70,33 @@
         <!-- Radar decorativo -->
         <div class="radar-wrap">
           <svg class="radar-svg" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+            <!-- Círculos concêntricos -->
             <circle cx="200" cy="200" r="188" fill="none" stroke="#d9dee6" stroke-width="1" />
             <circle cx="200" cy="200" r="148" fill="none" stroke="#d9dee6" stroke-width="1" />
             <circle cx="200" cy="200" r="108" fill="none" stroke="#d9dee6" stroke-width="1" />
             <circle cx="200" cy="200" r="68"  fill="none" stroke="#d9dee6" stroke-width="1" />
             <circle cx="200" cy="200" r="30"  fill="none" stroke="#d9dee6" stroke-width="1" />
+
+            <!-- Linhas de eixo -->
             <line x1="200" y1="12"  x2="200" y2="388" stroke="#d9dee6" stroke-width="0.5" />
             <line x1="12"  y1="200" x2="388" y2="200" stroke="#d9dee6" stroke-width="0.5" />
             <line x1="67"  y1="67"  x2="333" y2="333" stroke="#d9dee6" stroke-width="0.5" />
             <line x1="333" y1="67"  x2="67"  y2="333" stroke="#d9dee6" stroke-width="0.5" />
-            <circle cx="290" cy="142" r="4.5" fill="#dc2626" />
-            <circle cx="148" cy="258" r="3.5" fill="#dc2626" />
-            <circle cx="318" cy="272" r="3"   fill="#dc2626" />
+
+            <!-- Pontos de alvo -->
+            <circle ref="dotA" cx="290" cy="142" r="4.5" fill="#dc2626" :class="{ 'dot-detected': detected.a }" />
+            <circle ref="dotB" cx="148" cy="258" r="3.5" fill="#dc2626" :class="{ 'dot-detected': detected.b }" />
+            <circle ref="dotC" cx="318" cy="272" r="3"   fill="#dc2626" :class="{ 'dot-detected': detected.c }" />
+
+            <!-- Cardinal: N S L O -->
+            <text x="200" y="3"   text-anchor="middle" dominant-baseline="hanging" class="cardinal">N</text>
+            <text x="200" y="397" text-anchor="middle" dominant-baseline="auto"    class="cardinal">S</text>
+            <text x="397" y="200" text-anchor="end"    dominant-baseline="middle"  class="cardinal">L</text>
+            <text x="3"   y="200" text-anchor="start"  dominant-baseline="middle"  class="cardinal">O</text>
           </svg>
+
           <div class="radar-badge">
-            <svg viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg">
-              <path d="M50 4L6 24V60C6 86 26 107 50 118C74 107 94 86 94 60V24L50 4Z" fill="#0f2347" stroke="#c8a951" stroke-width="2.5" />
-              <path d="M50 28L54.8 43H70L58 51.5L62.8 66.5L50 58L37.2 66.5L42 51.5L30 43H45.2L50 28Z" fill="#c8a951" />
-            </svg>
+            <img src="@/assets/images/logo-pmsp.png" alt="Logo PMESP" />
           </div>
         </div>
       </div>
@@ -199,7 +207,7 @@
 </template>
 
 <script setup>
-import { reactive, ref, onBeforeUnmount } from 'vue'
+import { reactive, ref, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useApi } from '@/composables/useApi'
@@ -216,6 +224,52 @@ const blocked = ref(0)
 
 let countdownTimer = null
 
+// ── Scan line ──
+const scanLineEl = ref(null)
+const dotA = ref(null)
+const dotB = ref(null)
+const dotC = ref(null)
+const detected = reactive({ a: false, b: false, c: false })
+
+const SCAN_MS = 14000
+const MISS_CHANCE = { a: 0.25, b: 0.45, c: 0.35 }
+let rafId = null
+let scanStart = null
+const lastDetect = { a: -Infinity, b: -Infinity, c: -Infinity }
+
+function animateScan(ts) {
+  if (!scanStart) scanStart = ts
+  const elapsed = (ts - scanStart) % SCAN_MS
+  const progress = elapsed / SCAN_MS
+  const scanY = progress * (window.innerHeight + 8) - 4
+
+  if (scanLineEl.value) {
+    const op = progress < 0.04 ? progress / 0.04 : progress > 0.96 ? (1 - progress) / 0.04 : 1
+    scanLineEl.value.style.transform = `translateY(${scanY}px)`
+    scanLineEl.value.style.opacity = op
+  }
+
+  const dots = [
+    { key: 'a', el: dotA.value },
+    { key: 'b', el: dotB.value },
+    { key: 'c', el: dotC.value },
+  ]
+  for (const { key, el } of dots) {
+    if (!el || detected[key] || ts - lastDetect[key] < SCAN_MS * 0.85) continue
+    const rect = el.getBoundingClientRect()
+    const dotY = rect.top + rect.height / 2
+    if (Math.abs(scanY - dotY) < 10) {
+      lastDetect[key] = ts
+      if (Math.random() > MISS_CHANCE[key]) {
+        detected[key] = true
+        setTimeout(() => { detected[key] = false }, 1300)
+      }
+    }
+  }
+
+  rafId = requestAnimationFrame(animateScan)
+}
+
 function startCountdown(seconds) {
   blocked.value = seconds
   clearInterval(countdownTimer)
@@ -229,7 +283,11 @@ function startCountdown(seconds) {
   }, 1000)
 }
 
-onBeforeUnmount(() => clearInterval(countdownTimer))
+onMounted(() => { rafId = requestAnimationFrame(animateScan) })
+onBeforeUnmount(() => {
+  clearInterval(countdownTimer)
+  if (rafId) cancelAnimationFrame(rafId)
+})
 
 async function handleLogin() {
   if (blocked.value > 0) return
@@ -275,6 +333,8 @@ async function handleLogin() {
   justify-content: space-between;
   padding: 0 2rem;
   flex-shrink: 0;
+  position: relative;
+  z-index: 2;
 }
 
 .brand {
@@ -284,15 +344,17 @@ async function handleLogin() {
 }
 
 .brand-icon {
-  width: 28px;
-  height: auto;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
+  flex-shrink: 0;
 }
 
-.brand-icon svg {
-  width: 28px;
-  height: auto;
+.brand-icon img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
 }
 
 .brand-text {
@@ -451,8 +513,8 @@ async function handleLogin() {
   bottom: -60px;
   left: 50%;
   transform: translateX(-20%);
-  width: 460px;
-  height: 460px;
+  width: 360px;
+  height: 360px;
   z-index: 1;
   pointer-events: none;
   display: flex;
@@ -470,14 +532,40 @@ async function handleLogin() {
 .radar-badge {
   position: relative;
   z-index: 2;
-  width: 72px;
-  height: auto;
-  opacity: 0.85;
+  width: 120px;
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.radar-badge svg {
-  width: 72px;
-  height: auto;
+.radar-badge img {
+  width: 120px;
+  height: 120px;
+  object-fit: contain;
+}
+
+/* Labels cardinais N S L O */
+.cardinal {
+  font-size: 10px;
+  font-weight: 700;
+  fill: #b0b8c4;
+  font-family: 'Inter', sans-serif;
+  letter-spacing: 0.08em;
+}
+
+/* Detecção dos pontos no radar */
+.dot-detected {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: dotDetect 1.3s ease-out forwards;
+}
+
+@keyframes dotDetect {
+  0%   { filter: drop-shadow(0 0 0px rgba(220,38,38,0)); transform: scale(1); }
+  18%  { filter: drop-shadow(0 0 10px rgba(220,38,38,1)) drop-shadow(0 0 4px rgba(255,180,180,0.9)); transform: scale(3.2); }
+  55%  { filter: drop-shadow(0 0 5px rgba(220,38,38,0.5)); transform: scale(1.9); }
+  100% { filter: drop-shadow(0 0 0px rgba(220,38,38,0)); transform: scale(1); }
 }
 
 /* ── Coluna direita ── */
@@ -488,6 +576,8 @@ async function handleLogin() {
   align-items: center;
   justify-content: center;
   padding: 2rem 3rem 2rem 1rem;
+  position: relative;
+  z-index: 2;
 }
 
 /* ── Card ── */
@@ -746,6 +836,30 @@ async function handleLogin() {
   color: #9ca3af;
   letter-spacing: 0.1em;
   font-weight: 500;
+}
+
+/* ── Scan line de fundo ── */
+.scan-line {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(220, 38, 38, 0.4) 20%,
+    rgba(220, 38, 38, 0.85) 50%,
+    rgba(220, 38, 38, 0.4) 80%,
+    transparent 100%
+  );
+  box-shadow:
+    0 0 12px 4px rgba(220, 38, 38, 0.2),
+    0 0 40px 10px rgba(220, 38, 38, 0.08);
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0;
+  will-change: transform, opacity;
 }
 
 /* ── Transitions ── */

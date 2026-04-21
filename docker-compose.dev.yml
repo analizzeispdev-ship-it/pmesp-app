@@ -9,6 +9,8 @@ services:
       MONGO_INITDB_DATABASE: ${MONGO_DB:-pmesp}
     volumes:
       - mongo_data_dev:/data/db
+    ports:
+      - "27017:27017"
     networks:
       - pmesp_dev
 
