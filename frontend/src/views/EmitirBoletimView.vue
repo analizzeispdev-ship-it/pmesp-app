@@ -601,7 +601,4 @@ function logout() {
 
 .no-permission svg { width: 40px; height: 40px; color: var(--border); }
 
-@media (max-width: 768px) {
-  .layout { flex-direction: column; }
-}
 </style>

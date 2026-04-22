@@ -556,10 +556,4 @@ function logout() {
   vertical-align: middle;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .layout {
-    flex-direction: column;
-  }
-}
 </style>

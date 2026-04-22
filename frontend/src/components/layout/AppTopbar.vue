@@ -252,6 +252,10 @@ onMounted(() => {
 }
 
 @media (max-width: 768px) {
+  .topbar {
+    padding-left: 3.75rem;
+  }
+
   .topbar-right {
     gap: 0.75rem;
   }

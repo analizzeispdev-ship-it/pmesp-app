@@ -294,7 +294,4 @@ function logout() {
   color: var(--text-muted);
 }
 
-@media (max-width: 768px) {
-  .layout { flex-direction: column; }
-}
 </style>

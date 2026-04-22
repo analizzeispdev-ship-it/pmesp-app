@@ -224,7 +224,6 @@ function logout() {
 }
 
 @media (max-width: 768px) {
-  .layout { flex-direction: column; }
   .content { max-width: 100%; }
 }
 </style>

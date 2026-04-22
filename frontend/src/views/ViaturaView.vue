@@ -314,7 +314,4 @@ function logout() {
   flex-direction: column;
 }
 
-@media (max-width: 768px) {
-  .layout { flex-direction: column; }
-}
 </style>

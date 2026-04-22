@@ -364,7 +364,6 @@ watch(
 }
 
 @media (max-width: 768px) {
-  .layout { flex-direction: column; }
   .toolbar-right { width: 100%; }
   .search-input { width: 100%; }
 }

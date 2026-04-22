@@ -1,5 +1,16 @@
 <template>
-  <aside class="sidebar">
+  <Teleport to="body">
+    <button v-if="!isOpen" class="sidebar-hamburger" @click="isOpen = true" aria-label="Abrir menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="3" y1="6" x2="21" y2="6" />
+        <line x1="3" y1="12" x2="21" y2="12" />
+        <line x1="3" y1="18" x2="21" y2="18" />
+      </svg>
+    </button>
+    <div v-if="isOpen" class="sidebar-backdrop" @click="isOpen = false" />
+  </Teleport>
+
+  <aside class="sidebar" :class="{ 'sidebar--open': isOpen }">
     <div class="sidebar-header">
       <div class="brand">
         <div class="brand-icon">
@@ -10,10 +21,16 @@
           <span class="brand-name">Centro de Comando</span>
         </div>
       </div>
+      <button class="sidebar-close" @click="isOpen = false" aria-label="Fechar menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </button>
     </div>
 
     <nav class="sidebar-nav">
-      <RouterLink to="/" class="nav-item" :class="{ active: currentPath === '/' }">
+      <RouterLink to="/" class="nav-item" :class="{ active: currentPath === '/' }" @click="isOpen = false">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <rect x="3" y="3" width="7" height="7" rx="1" />
           <rect x="14" y="3" width="7" height="7" rx="1" />
@@ -25,7 +42,7 @@
 
       <div class="nav-section">Operacional</div>
 
-      <RouterLink to="/efetivo" class="nav-item" :class="{ active: currentPath === '/efetivo' }">
+      <RouterLink to="/efetivo" class="nav-item" :class="{ active: currentPath === '/efetivo' }" @click="isOpen = false">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
           <circle cx="9" cy="7" r="4" />
@@ -50,6 +67,7 @@
         to="/viaturas"
         class="nav-item"
         :class="{ active: currentPath === '/viaturas' }"
+        @click="isOpen = false"
       >
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <rect x="1" y="3" width="15" height="13" rx="2" />
@@ -91,6 +109,7 @@
           to="/gestao/usuarios"
           class="nav-item"
           :class="{ active: currentPath === '/gestao/usuarios' }"
+          @click="isOpen = false"
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
@@ -106,6 +125,7 @@
           to="/gestao/efetivo"
           class="nav-item"
           :class="{ active: currentPath === '/gestao/efetivo' }"
+          @click="isOpen = false"
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
@@ -121,6 +141,7 @@
           to="/emitir-boletim"
           class="nav-item"
           :class="{ active: currentPath === '/emitir-boletim' }"
+          @click="isOpen = false"
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
@@ -165,7 +186,10 @@
 </template>
 
 <script setup>
+import { ref } from 'vue'
 import { RouterLink } from 'vue-router'
+
+const isOpen = ref(false)
 
 defineProps({
   currentPath: {
@@ -388,13 +412,92 @@ const emit = defineEmits(['logout'])
   color: var(--error);
 }
 
+.sidebar-close {
+  display: none;
+}
+
 @media (max-width: 768px) {
   .sidebar {
-    width: 100%;
-    height: auto;
-    position: static;
-    border-right: none;
-    border-bottom: 1px solid var(--border);
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 272px;
+    z-index: 180;
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+    border-right: 1px solid var(--border);
+  }
+
+  .sidebar--open {
+    transform: translateX(0);
+  }
+
+  .sidebar-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: auto;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-muted);
+    padding: 0.25rem;
+    transition: color 0.15s;
+  }
+
+  .sidebar-close:hover { color: var(--text-strong); }
+
+  .sidebar-close svg {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+:global(.sidebar-hamburger) {
+  display: none;
+}
+
+:global(.sidebar-backdrop) {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  :global(.sidebar-hamburger) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    top: 0.875rem;
+    left: 0.875rem;
+    z-index: 200;
+    width: 38px;
+    height: 38px;
+    border-radius: 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    color: var(--text-soft);
+    box-shadow: var(--shadow-sm);
+    transition: background 0.15s, color 0.15s;
+  }
+
+  :global(.sidebar-hamburger:hover) {
+    background: var(--surface-subtle);
+    color: var(--text-strong);
+  }
+
+  :global(.sidebar-hamburger svg) {
+    width: 18px;
+    height: 18px;
+  }
+
+  :global(.sidebar-backdrop) {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgb(0 0 0 / 45%);
+    z-index: 170;
   }
 }
 </style>
