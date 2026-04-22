@@ -25,6 +25,12 @@ server/
 │   ├── publicacoes/
 │   │   ├── index.get.ts
 │   │   └── index.post.ts
+│   ├── viaturas/
+│   │   ├── index.get.ts
+│   │   ├── index.post.ts
+│   │   └── [id]/
+│   │       ├── encerrar.patch.ts
+│   │       └── tripulacao.patch.ts
 │   └── gestao/
 │       └── efetivo/
 │           ├── index.get.ts
@@ -37,7 +43,8 @@ server/
 ├── services/         → Classes estáticas com toda lógica de negócio (a criar conforme crescimento)
 ├── models/
 │   ├── User.ts
-│   └── Publicacao.ts
+│   ├── Publicacao.ts
+│   └── Viatura.ts
 ├── middleware/
 │   ├── 01.cors.ts
 │   └── 02.rateLimit.ts
@@ -199,6 +206,48 @@ Push `{ descricao, data: now, aplicadoPor: payload.id }`. Retorna `{ officer }`.
 ### `server/api/gestao/efetivo/[id]/exonerar.patch.ts`
 `PATCH /api/gestao/efetivo/:id/exonerar` — requer p1 ou admin
 Não permite exonerar a si mesmo. Seta `active: false`. Retorna `{ officer }`.
+
+### `server/models/Viatura.ts`
+Schema Mongoose:
+```
+prefixo        String   required, trim
+observacao     String   default: ''
+status         'ativa' | 'encerrada'  default: 'ativa'
+motorista      ObjectId ref: 'User'  required
+chefeDeBarca   ObjectId ref: 'User'  required
+auxiliar1–3    ObjectId ref: 'User'  default: null
+abertaPor      ObjectId ref: 'User'  required
+encerradaPor   ObjectId ref: 'User'  default: null
+abertaEm       Date     default: Date.now
+encerradaEm    Date     default: null
+timestamps: true
+```
+
+### `server/api/viaturas/index.get.ts`
+`GET /api/viaturas` — requer Bearer token (qualquer role)
+Retorna: `{ viaturas: [...] }` — apenas `status: 'ativa'`, ordenadas por `abertaEm` desc.
+Popula motorista, chefeDeBarca, auxiliar1–3 com `name rg graduacao cargo username`.
+
+### `server/api/viaturas/index.post.ts`
+`POST /api/viaturas` — requer Bearer + cargo p1 ou admin
+Body: `{ prefixo, observacao?, motorista, chefeDeBarca, auxiliar1?, auxiliar2?, auxiliar3? }`
+Valida: prefixo obrigatório, motorista/chefeDeBarca obrigatórios, sem IDs duplicados na barca.
+Ao criar: `User.updateMany({ _id: { $in: ids } }, { patrulhando: true, ultimaPatrulha: now })`.
+Retorna `{ viatura }` populada.
+
+### `server/api/viaturas/[id]/tripulacao.patch.ts`
+`PATCH /api/viaturas/:id/tripulacao` — requer estar na tripulação ou admin
+Body: `{ motorista, chefeDeBarca, auxiliar1?, auxiliar2?, auxiliar3? }`
+Calcula `addedIds` (novos na viatura) e `removedIds` (saíram). Verifica `addedIds` não estão patrulhando em outra viatura.
+`updateMany` removedIds → `patrulhando: false`; addedIds → `patrulhando: true, ultimaPatrulha: now`.
+Retorna `{ viatura }` populada.
+
+### `server/api/viaturas/[id]/encerrar.patch.ts`
+`PATCH /api/viaturas/:id/encerrar` — requer p1 ou admin
+Checa se viatura é ativa (400 se já encerrada).
+Ao encerrar: `User.updateMany(...)` seta `patrulhando: false` em todos da barca.
+Seta `status: 'encerrada'`, `encerradaPor`, `encerradaEm: now`.
+Retorna `{ viatura }` populada.
 
 ### `server/api/users/index.post.ts`
 `POST /api/users` — requer Bearer token · role: `admin` OU cargo: `p1`

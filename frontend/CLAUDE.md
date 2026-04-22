@@ -23,6 +23,7 @@ src/
 │   └── graduacoes.js               → GRADUACOES[], CARGOS[], getGraduacao(), buildDisplayName()
 ├── components/
 │   ├── ui/                         → Componentes genéricos reutilizáveis
+│   │   ├── AppToast.vue            → toast global: fixed top-center, slide+fade transition, progress bar CSS-driven; consome useToastStore
 │   │   ├── BaseButton.vue          → (a criar) variantes: primary, danger, ghost; prop loading
 │   │   ├── BaseInput.vue           → (a criar) label, erro, slot ícone, prop type
 │   │   ├── BaseModal.vue           → (a criar) overlay, título, slot conteúdo, emit close
@@ -42,6 +43,11 @@ src/
 │   │   ├── PromoverModal.vue      → modal overlay; select de nova graduação com grupos; emite `confirm(novaGraduacao)`
 │   │   ├── AdvertenciaModal.vue   → modal overlay; textarea motivo + contador PAD; emite `confirm(descricao)`
 │   │   └── ExonerarModal.vue      → modal overlay de confirmação destrutiva; emite `confirm`
+│   ├── viaturas/
+│   │   ├── ViaturaDropdown.vue     → item colapsável; props: viatura, showEncerrar, showEdit, actionLoading; emits: encerrar(id), edit-crew(viatura)
+│   │   ├── AbrirViaturaModal.vue   → modal form: prefixo, observação, 5 selects de cargo; emite confirm(payload)
+│   │   ├── EncerrarViaturaModal.vue → modal confirmação destrutiva; mostra crew; emite confirm
+│   │   └── EditarTripulacaoModal.vue → modal pré-populado com crew atual; selects filtrados; marca "EM OUTRA BARCA"; emite confirm(crew)
 │   ├── efetivo/
 │   │   ├── EfetivoTable.vue        → tabela de policiais com avatar, cargo, graduação, PAD, cursos, patrulha
 │   │   ├── PadIndicator.vue        → 3 quadradinhos coloridos (0=vazio, 1=dourado, 2=âmbar, 3=vermelho)
@@ -57,7 +63,8 @@ src/
 │   └── index.js                    → rotas + guard beforeEach
 ├── stores/
 │   ├── auth.js                     → Pinia store de autenticação
-│   └── publicacoes.js              → Pinia store de avisos e boletins internos
+│   ├── publicacoes.js              → Pinia store de avisos e boletins internos
+│   └── toast.js                    → Pinia store global de notificações; actions: show(msg, type, duration), hide()
 └── views/
     ├── LoginView.vue
     ├── ChangePasswordView.vue
@@ -65,7 +72,8 @@ src/
     ├── EfetivoView.vue
     ├── GestaoUsuariosView.vue
     ├── EmitirBoletimView.vue
-    └── GestaoEfetivoView.vue
+    ├── GestaoEfetivoView.vue
+    └── ViaturaView.vue
 ```
 
 ---
@@ -79,7 +87,7 @@ createApp(App) → use(createPinia()) → use(router) → mount('#app')
 Ordem importa: Pinia antes do router (router guards usam stores).
 
 ### `src/App.vue`
-Apenas `<RouterView />`. Sem estado, sem lógica.
+`<RouterView />` + `<AppToast />` (montado globalmente via Teleport). Sem estado, sem lógica.
 
 ### `src/assets/main.css`
 Reset global (`box-sizing`, `margin`, `padding`). Variáveis CSS:
@@ -172,6 +180,7 @@ Histórico: `createWebHistory()`.
 | `/gestao/usuarios` | `GestaoUsuarios` | `GestaoUsuariosView` | `requiresAuth: true, requiresCargo: 'p1'` |
 | `/emitir-boletim` | `EmitirBoletim` | `EmitirBoletimView` | `requiresAuth: true, requiresEmitir: true` |
 | `/gestao/efetivo` | `GestaoEfetivo` | `GestaoEfetivoView` | `requiresAuth: true, requiresCargo: 'p1'` |
+| `/viaturas` | `Viaturas` | `ViaturaView` | `requiresAuth: true, requiresCargo: 'p1'` |
 
 **Guard `beforeEach`:**
 1. Rota pública → passa
@@ -222,6 +231,15 @@ Sidebar institucional fixa do dashboard.
 - Exibe branding PMESP, grupos de navegação, itens desabilitados "Em breve" e rodapé do usuário.
 - Cores e tipografia aplicadas por variáveis CSS globais (tokens), sem valores fixos de tema.
 
+### `src/stores/viaturas.js`
+Store Pinia `viaturas`. Gerencia viaturas em patrulha.
+**State:** `ativas[]`, `loading`, `error`, `actionLoading`, `actionError`
+**Getters:** `count` → `ativas.length`
+**Actions:**
+- `fetchAtivas()` → `GET /api/viaturas` → popula `ativas`
+- `abrirViatura(payload)` → `POST /api/viaturas` → insere no topo de `ativas`
+- `encerrarViatura(id)` → `PATCH /api/viaturas/:id/encerrar` → remove de `ativas`
+
 ### `src/stores/gestao.js`
 Store Pinia `gestao`. Gerencia criação de usuários via `POST /api/users`.
 **State:** `loading`, `error`, `lastCreated: { user, tempPassword } | null`
@@ -248,6 +266,13 @@ Page tabs: "Boletim Interno" (visível se `canPostBoletim`) e "Aviso" (visível 
 Boletim: 4 textareas (parte1–4) + preview "Assina: nome" + submit.
 Aviso: título + textarea conteúdo + submit.
 Tab inicial: `boletim` se `canPostBoletim`, senão `aviso`.
+
+### `src/views/ViaturaView.vue`
+Rota `/viaturas` — acesso P1 + admin. Gerencia viaturas abertas.
+Layout: AppSidebar + AppTopbar. Page card com botão "Abrir Viatura" no header.
+Lista `ViaturaDropdown` com `showEncerrar=true` e `@encerrar → EncerrarViaturaModal`.
+Usa `useViaturasStore` + `useGestaoEfetivoStore` (para officers do AbrirViaturaModal).
+`onMounted`: chama `store.fetchAtivas()` e `gestaoEfetivo.fetchAtivos()` se vazio.
 
 ### `src/views/GestaoUsuariosView.vue`
 Acessível apenas para `cargo: 'p1'` (RH) e `admin`. Rota `/gestao/usuarios` com `requiresCargo: 'p1'` no router guard.

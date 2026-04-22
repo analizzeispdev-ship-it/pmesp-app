@@ -45,14 +45,29 @@
         <span class="badge-soon">Em breve</span>
       </a>
 
-      <a class="nav-item disabled" title="Em desenvolvimento">
+      <RouterLink
+        v-if="isRh"
+        to="/viaturas"
+        class="nav-item"
+        :class="{ active: currentPath === '/viaturas' }"
+      >
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <rect x="1" y="3" width="15" height="13" rx="2" />
           <path d="M16 8h4l3 3v5h-7V8z" />
           <circle cx="5.5" cy="18.5" r="2.5" />
           <circle cx="18.5" cy="18.5" r="2.5" />
         </svg>
-        <span>Viaturas</span>
+        <span>Registro de Turno</span>
+      </RouterLink>
+
+      <a v-else class="nav-item disabled" title="Em desenvolvimento">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="1" y="3" width="15" height="13" rx="2" />
+          <path d="M16 8h4l3 3v5h-7V8z" />
+          <circle cx="5.5" cy="18.5" r="2.5" />
+          <circle cx="18.5" cy="18.5" r="2.5" />
+        </svg>
+        <span>Registro de Turno</span>
         <span class="badge-soon">Em breve</span>
       </a>
 

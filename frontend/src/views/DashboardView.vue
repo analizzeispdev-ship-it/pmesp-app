@@ -77,7 +77,7 @@
               </svg>
             </div>
             <div class="stat-info">
-              <span class="stat-value">—</span>
+              <span class="stat-value">{{ viaturas.loading ? '—' : viaturas.count }}</span>
               <span class="stat-label">Viaturas em Patrulha</span>
             </div>
           </div>
@@ -112,6 +112,37 @@
               O sistema está em fase inicial. Os módulos de Efetivo, Ocorrências, Viaturas e Relatórios
               serão disponibilizados em breve. Utilize o menu lateral para navegar quando os módulos forem liberados.
             </p>
+          </div>
+        </div>
+
+        <!-- Viaturas em Patrulha -->
+        <div class="quadro-card">
+          <div class="quadro-header">
+            <h3 class="quadro-title">Viaturas em Patrulha</h3>
+            <span class="viaturas-badge">
+              {{ viaturas.loading ? '...' : `${viaturas.count} ativa${viaturas.count !== 1 ? 's' : ''}` }}
+            </span>
+          </div>
+
+          <div v-if="viaturas.loading" class="viaturas-feedback">
+            <div class="mini-spinner" />
+            <span>Carregando...</span>
+          </div>
+          <div v-else-if="viaturas.ativas.length === 0" class="viaturas-empty">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <rect x="1" y="3" width="15" height="13" rx="2" />
+              <path d="M16 8h4l3 3v5h-7V8z" />
+              <circle cx="5.5" cy="18.5" r="2.5" />
+              <circle cx="18.5" cy="18.5" r="2.5" />
+            </svg>
+            <span>Nenhuma viatura em patrulha no momento.</span>
+          </div>
+          <div v-else class="viaturas-list">
+            <ViaturaDropdown
+              v-for="v in viaturas.ativas"
+              :key="v._id"
+              :viatura="v"
+            />
           </div>
         </div>
 
@@ -168,15 +199,18 @@ import { RouterLink } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useEfetivoStore } from '@/stores/efetivo'
 import { usePublicacoesStore } from '@/stores/publicacoes'
+import { useViaturasStore } from '@/stores/viaturas'
 import { useClock } from '@/composables/useClock'
 import AppSidebar from '@/components/layout/AppSidebar.vue'
 import AppTopbar from '@/components/layout/AppTopbar.vue'
 import AvisosTab from '@/components/dashboard/AvisosTab.vue'
 import BoletinsTab from '@/components/dashboard/BoletinsTab.vue'
+import ViaturaDropdown from '@/components/viaturas/ViaturaDropdown.vue'
 
 const auth = useAuthStore()
 const efetivo = useEfetivoStore()
 const pub = usePublicacoesStore()
+const viaturas = useViaturasStore()
 const route = useRoute()
 const router = useRouter()
 const { currentTime, currentDate } = useClock()
@@ -205,7 +239,7 @@ const greeting = computed(() => {
 
 onMounted(async () => {
   await pub.fetchAll()
-  // marca aba ativa como lida imediatamente
+  viaturas.fetchAtivas()
   if (quadroTab.value === 'avisos') pub.markAvisosRead()
   else pub.markBoletinsRead()
 })
@@ -383,6 +417,52 @@ function logout() {
   color: var(--text-soft);
   line-height: var(--lh-relaxed);
 }
+
+/* Viaturas */
+.viaturas-badge {
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+  background: var(--success-bg);
+  color: var(--success);
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid #bbf7d0;
+}
+
+.viaturas-feedback {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 1.5rem;
+  color: var(--text-faint);
+  font-size: var(--fs-sm);
+}
+
+.mini-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--border);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.viaturas-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 2.5rem;
+  color: var(--text-faint);
+  font-size: var(--fs-sm);
+}
+
+.viaturas-empty svg { width: 36px; height: 36px; color: var(--border); }
+
+.viaturas-list { display: flex; flex-direction: column; }
 
 /* Quadro de publicações */
 .quadro-card {

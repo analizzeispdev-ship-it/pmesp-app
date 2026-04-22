@@ -69,6 +69,14 @@
               </svg>
               Advertência
             </button>
+            <button class="btn-action dismiss" title="Exonerar" @click="$emit('exonerar', officer)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                <circle cx="8.5" cy="7" r="4" />
+                <line x1="23" y1="11" x2="17" y2="11" />
+              </svg>
+              Exonerar
+            </button>
             <button
               v-if="officer.advertencias?.length"
               class="btn-action view-adv"
@@ -80,14 +88,6 @@
                 <circle cx="12" cy="12" r="3" />
               </svg>
               PAD ({{ officer.advertencias.length }})
-            </button>
-            <button class="btn-action dismiss" title="Exonerar" @click="$emit('exonerar', officer)">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                <circle cx="8.5" cy="7" r="4" />
-                <line x1="23" y1="11" x2="17" y2="11" />
-              </svg>
-              Exonerar
             </button>
           </div>
         </td>
@@ -218,4 +218,8 @@ function dotClass(i, count) {
 }
 
 .btn-action.dismiss:hover { background: var(--error); color: #fff; }
+
+.btn-action svg {
+  color: var(--text-muted);
+}
 </style>

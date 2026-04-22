@@ -44,6 +44,12 @@ const routes = [
     component: () => import('@/views/GestaoEfetivoView.vue'),
     meta: { requiresAuth: true, requiresCargo: 'p1' },
   },
+  {
+    path: '/viaturas',
+    name: 'RegistroTurno',
+    component: () => import('@/views/ViaturaView.vue'),
+    meta: { requiresAuth: true, requiresCargo: 'p1' },
+  },
 ]
 
 const router = createRouter({

@@ -24,22 +24,6 @@
 
       <main class="content">
 
-        <!-- Action error bar -->
-        <div v-if="store.actionError" class="error-bar">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
-          </svg>
-          {{ store.actionError }}
-        </div>
-
-        <!-- Success bar -->
-        <div v-if="successMsg" class="success-bar">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="20 6 9 17 4 12" />
-          </svg>
-          {{ successMsg }}
-        </div>
-
         <!-- Card -->
         <div class="page-card">
           <div class="card-header">
@@ -131,10 +115,11 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useGestaoEfetivoStore } from '@/stores/gestaoEfetivo'
+import { useToastStore } from '@/stores/toast'
 import { useClock } from '@/composables/useClock'
 import AppSidebar from '@/components/layout/AppSidebar.vue'
 import AppTopbar from '@/components/layout/AppTopbar.vue'
@@ -147,14 +132,18 @@ import VerAdvertenciasModal from '@/components/gestao/VerAdvertenciasModal.vue'
 
 const auth = useAuthStore()
 const store = useGestaoEfetivoStore()
+const toast = useToastStore()
 const route = useRoute()
 const router = useRouter()
 const { currentTime, currentDate } = useClock()
 
 const activeTab = ref('ativos')
 const selectedOfficer = ref(null)
-const successMsg = ref('')
 const modal = reactive({ promover: false, advertencia: false, exonerar: false, verAdvertencias: false })
+
+watch(() => store.actionError, (err) => {
+  if (err) toast.show(err, 'error')
+})
 
 const initials = computed(() => {
   const parts = (auth.user?.name || 'U').split(' ')
@@ -185,16 +174,11 @@ function closeModals() {
   modal.verAdvertencias = false
 }
 
-function showSuccess(msg) {
-  successMsg.value = msg
-  setTimeout(() => { successMsg.value = '' }, 3500)
-}
-
 async function onPromover(novaGraduacao) {
   try {
     await store.promover(selectedOfficer.value._id, novaGraduacao)
     closeModals()
-    showSuccess(`${selectedOfficer.value.name} promovido com sucesso.`)
+    toast.show(`${selectedOfficer.value.name} promovido com sucesso.`)
   } catch {}
 }
 
@@ -202,7 +186,7 @@ async function onAdvertencia(descricao) {
   try {
     await store.darAdvertencia(selectedOfficer.value._id, descricao)
     closeModals()
-    showSuccess(`Advertência registrada para ${selectedOfficer.value.name}.`)
+    toast.show(`Advertência registrada para ${selectedOfficer.value.name}.`)
   } catch {}
 }
 
@@ -211,7 +195,7 @@ async function onExonerar() {
     const nome = selectedOfficer.value.name
     await store.exonerar(selectedOfficer.value._id)
     closeModals()
-    showSuccess(`${nome} foi exonerado.`)
+    toast.show(`${nome} foi exonerado.`)
   } catch {}
 }
 
@@ -243,28 +227,6 @@ function logout() {
   gap: 1rem;
 }
 
-.error-bar, .success-bar {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1rem;
-  font-size: var(--fs-sm);
-  border-radius: 8px;
-}
-
-.error-bar {
-  background: var(--danger-soft);
-  color: var(--error);
-  border: 1px solid #fca5a5;
-}
-
-.success-bar {
-  background: var(--success-bg);
-  color: var(--success);
-  border: 1px solid #bbf7d0;
-}
-
-.error-bar svg, .success-bar svg { width: 16px; height: 16px; flex-shrink: 0; }
 
 .page-card {
   background: var(--surface);
