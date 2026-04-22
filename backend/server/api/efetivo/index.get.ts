@@ -17,10 +17,10 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 401, message: 'Token inválido ou expirado' })
   }
 
-  const officers = await User.find({ active: true })
+  const officers = await User.find({ active: true, role: { $ne: 'admin' } })
     .select('-password -__v')
-    .sort({ name: 1 })
+    .sort({ graduacao: 1 })
     .lean()
-
+  
   return { officers }
 })

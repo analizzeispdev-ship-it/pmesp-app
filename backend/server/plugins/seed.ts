@@ -14,7 +14,7 @@ export default defineNitroPlugin(async () => {
         rg: '00001',
         role: 'admin',
         cargo: 'p1',
-        graduacao: 'capitao',
+        graduacao: '4',
         dataPromocao: null,
         badge: '00001',
         firstAccess: true,

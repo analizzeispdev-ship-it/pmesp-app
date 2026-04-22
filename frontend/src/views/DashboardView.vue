@@ -3,9 +3,10 @@
     <AppSidebar
       :current-path="route.path"
       :is-admin="auth.isAdmin"
+      :is-rh="auth.isRh"
       :initials="initials"
       :user-name="auth.user?.name || ''"
-      :user-rank="auth.user?.rank || roleLabel"
+      :user-rank="auth.graduacaoInfo?.label || roleLabel"
       @logout="logout"
     />
 
@@ -121,11 +122,13 @@
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { useEfetivoStore } from '@/stores/efetivo'
 import { useClock } from '@/composables/useClock'
 import AppSidebar from '@/components/layout/AppSidebar.vue'
 import AppTopbar from '@/components/layout/AppTopbar.vue'
 
 const auth = useAuthStore()
+const efetivo = useEfetivoStore()
 const route = useRoute()
 const router = useRouter()
 const { currentTime, currentDate } = useClock()
@@ -152,6 +155,7 @@ const greeting = computed(() => {
 })
 
 function logout() {
+  efetivo.clear()
   auth.logout()
   router.push('/login')
 }

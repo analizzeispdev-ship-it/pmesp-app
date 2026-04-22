@@ -26,6 +26,12 @@ const routes = [
     component: () => import('@/views/EfetivoView.vue'),
     meta: { requiresAuth: true },
   },
+  {
+    path: '/gestao/usuarios',
+    name: 'GestaoUsuarios',
+    component: () => import('@/views/GestaoUsuariosView.vue'),
+    meta: { requiresAuth: true, requiresCargo: 'p1' },
+  },
 ]
 
 const router = createRouter({
@@ -45,6 +51,10 @@ router.beforeEach((to) => {
   }
 
   if (!auth.needsPasswordChange && to.name === 'ChangePassword') {
+    return '/'
+  }
+
+  if (to.meta.requiresCargo && auth.user?.cargo !== to.meta.requiresCargo && auth.user?.role !== 'admin') {
     return '/'
   }
 

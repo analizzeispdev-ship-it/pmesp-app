@@ -132,7 +132,7 @@
 
           <p class="card-footer-line">CANAL CRIPTOGRAFADO • SESSÃO TEMPORÁRIA • CONEXÃO SEGURA</p>
         </div>
-      </div>
+      </section>
     </div>
   </div>
 </template>

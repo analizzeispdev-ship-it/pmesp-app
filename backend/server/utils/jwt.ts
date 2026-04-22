@@ -4,6 +4,7 @@ export interface JwtPayload {
   id: string
   username: string
   role: string
+  cargo: string
 }
 
 export function signToken(payload: JwtPayload, secret: string): string {

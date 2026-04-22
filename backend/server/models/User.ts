@@ -20,6 +20,7 @@ export interface IUser extends Document {
   cursos: mongoose.Types.ObjectId[]
   advertencias: IAdvertencia[]
   patrulhando: boolean
+  ultimaPatrulha: Date | null
   badge: string
   firstAccess: boolean
   active: boolean
@@ -43,7 +44,7 @@ const UserSchema = new Schema<IUser>(
     rg: { type: String, default: '' },
     role: { type: String, enum: ['admin', 'supervisor', 'officer'], default: 'officer' },
     cargo: { type: String, enum: CARGO_VALUES, default: 'padrao' },
-    graduacao: { type: String, enum: GRADUACAO_VALUES, default: 'pm' },
+    graduacao: { type: String, enum: GRADUACAO_VALUES, default: '14' },
     dataPromocao: { type: Date, default: null },
     cursos: [{ type: Schema.Types.ObjectId, ref: 'Course' }],
     advertencias: {
@@ -73,4 +74,7 @@ UserSchema.methods.comparePassword = function (password: string): Promise<boolea
   return bcrypt.compare(password, this.password)
 }
 
-export const User = mongoose.models.User || mongoose.model<IUser>('User', UserSchema)
+if (mongoose.models['User']) {
+  delete (mongoose.models as Record<string, unknown>)['User']
+}
+export const User = mongoose.model<IUser>('User', UserSchema)

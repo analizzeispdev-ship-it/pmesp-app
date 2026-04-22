@@ -31,6 +31,9 @@ src/
 │   │   ├── BaseBadge.vue           → (a criar) badge de status/role
 │   │   ├── BaseCard.vue            → (a criar) card com sombra e padding padrão
 │   │   └── BaseTable.vue           → (a criar) tabela paginada com slot de colunas
+│   ├── gestao/
+│   │   ├── CadastroUsuarioForm.vue → form com nome, RG, username, graduação, cargo; emite `submit` com dados validados; mostra preview do displayName
+│   │   └── SenhaTempCard.vue      → exibe usuário criado + senha temporária com botão copiar + aviso de exibição única
 │   ├── efetivo/
 │   │   ├── EfetivoTable.vue        → tabela de policiais com avatar, cargo, graduação, PAD, cursos, patrulha
 │   │   ├── PadIndicator.vue        → 3 quadradinhos coloridos (0=vazio, 1=dourado, 2=âmbar, 3=vermelho)
@@ -50,7 +53,8 @@ src/
     ├── LoginView.vue
     ├── ChangePasswordView.vue
     ├── DashboardView.vue
-    └── EfetivoView.vue
+    ├── EfetivoView.vue
+    └── GestaoUsuariosView.vue
 ```
 
 ---
@@ -95,7 +99,8 @@ Espelho do `backend/server/constants/graduacoes.ts` para uso no frontend.
 - `GRADUACOES[]` — `{ label, value, nickPrefix, roleName, grupo }`
 - `CARGOS[]` — `{ label, value, description }`
 - `getGraduacao(value)` — busca graduação pelo value
-- `buildDisplayName(name, rg, graduacao)` → `"nickPrefix | nome - rg"` (ex: `✯ | Hugo Amorim - 5436`)
+- `buildDisplayName(name, rg, graduacao)` → `"nickPrefix | nome - rg"` (ex: `✧✧✧ | Hugo Amorim - 5436`)
+- Values numéricos: `'1'`=Coronel … `'14'`=Sd 2° Cl (1=maior, 14=menor posto). Usar `parseInt(value)` para ordenar.
 
 ### `src/stores/auth.js`
 Store Pinia `auth`. Persiste em `localStorage` (chaves: `pmesp_token`, `pmesp_user`).
@@ -105,6 +110,7 @@ Store Pinia `auth`. Persiste em `localStorage` (chaves: `pmesp_token`, `pmesp_us
 **Getters:**
 - `isAuthenticated` → `!!token`
 - `isAdmin` → `user.role === 'admin'`
+- `isRh` → `user.cargo === 'p1' || user.role === 'admin'`
 - `needsPasswordChange` → `!!user.firstAccess`
 - `displayName` → `buildDisplayName(user.name, user.rg, user.graduacao)` — ex: `✯ | Hugo Amorim - 5436`
 - `graduacaoInfo` → objeto completo da graduação atual (`{ label, nickPrefix, roleName, grupo }`)
@@ -149,6 +155,7 @@ Histórico: `createWebHistory()`.
 | `/primeiro-acesso` | `ChangePassword` | `ChangePasswordView` | `requiresAuth: true` |
 | `/` | `Dashboard` | `DashboardView` | `requiresAuth: true` |
 | `/efetivo` | `Efetivo` | `EfetivoView` | `requiresAuth: true` |
+| `/gestao/usuarios` | `GestaoUsuarios` | `GestaoUsuariosView` | `requiresAuth: true, requiresCargo: 'p1'` |
 
 **Guard `beforeEach`:**
 1. Rota pública → passa
@@ -190,10 +197,22 @@ Layout: sidebar fixa + área principal (topbar + conteúdo), com linguagem visua
 
 ### `src/components/layout/AppSidebar.vue`
 Sidebar institucional fixa do dashboard.
-- Recebe `currentPath`, `isAdmin`, `initials`, `userName`, `userRank`.
+- Recebe `currentPath`, `isAdmin`, `isRh`, `initials`, `userName`, `userRank`.
+- Seção "Gestão de Pessoal" visível apenas quando `isRh = true` (cargo p1 ou admin).
 - Emite `logout`.
 - Exibe branding PMESP, grupos de navegação, itens desabilitados "Em breve" e rodapé do usuário.
 - Cores e tipografia aplicadas por variáveis CSS globais (tokens), sem valores fixos de tema.
+
+### `src/stores/gestao.js`
+Store Pinia `gestao`. Gerencia criação de usuários via `POST /api/users`.
+**State:** `loading`, `error`, `lastCreated: { user, tempPassword } | null`
+**Action:** `criarUsuario(data)` → chama API e popula `lastCreated`; `resetLastCreated()` limpa para novo cadastro.
+
+### `src/views/GestaoUsuariosView.vue`
+Acessível apenas para `cargo: 'p1'` (RH) e `admin`. Rota `/gestao/usuarios` com `requiresCargo: 'p1'` no router guard.
+Dois estados: formulário (`CadastroUsuarioForm`) → após criação (`SenhaTempCard`).
+Formulário valida: nome, RG, username (letras/números/pontos, mínimo 3), graduação obrigatória.
+Mostra preview do displayName em tempo real enquanto preenche.
 
 ### `src/views/EfetivoView.vue`
 Layout idêntico ao Dashboard (sidebar + topbar + content). Usa `useClock()` e `useEfetivoStore`.

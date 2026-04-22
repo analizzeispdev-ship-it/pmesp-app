@@ -3,6 +3,7 @@
     <AppSidebar
       :current-path="route.path"
       :is-admin="auth.isAdmin"
+      :is-rh="auth.isRh"
       :initials="initials"
       :user-name="auth.user?.name || ''"
       :user-rank="auth.graduacaoInfo?.label || roleLabel"
@@ -120,7 +121,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useEfetivoStore } from '@/stores/efetivo'
@@ -151,7 +152,7 @@ const roleLabel = computed(() => {
 })
 
 const filteredOfficers = computed(() => {
-  return efetivo.officers.filter((o) => {
+  return (efetivo.officers ?? []).filter((o) => {
     const q = search.value.toLowerCase()
     const matchSearch =
       !q || o.name.toLowerCase().includes(q) || (o.rg || '').toLowerCase().includes(q)
@@ -168,11 +169,17 @@ const filteredOfficers = computed(() => {
 })
 
 function logout() {
+  efetivo.clear()
   auth.logout()
   router.push('/login')
 }
 
 onMounted(() => efetivo.fetchAll())
+
+watch(
+  () => route.path,
+  (path) => { if (path === '/efetivo') efetivo.fetchAll() }
+)
 </script>
 
 <style scoped>

@@ -58,7 +58,7 @@ Flag `connected` evita reconexão. Chamar `await connectDB()` no início de cada
 
 ### `server/utils/jwt.ts`
 Duas funções puras: `signToken(payload, secret)` → JWT 8h | `verifyToken(token, secret)` → JwtPayload.
-Interface: `JwtPayload { id, username, role }`.
+Interface: `JwtPayload { id, username, role, cargo }`.
 Secret sempre vem de `useRuntimeConfig().jwtSecret` — nunca hardcodar.
 
 ### `server/utils/rateLimit.ts`
@@ -81,7 +81,10 @@ Fonte de verdade para graduações e cargos. Exporta:
 - `getGraduacao(value)` — busca graduação pelo value
 - `buildDisplayName(name, rg, graduacao)` → `"nickPrefix | nome - rg"`
 
-Graduações: `pm` (✯), `2tenente` (✧), `1tenente` (✧✧), `capitao` (✧✧✧)
+Graduações (value numérico, 1=mais alto, 14=mais baixo):
+`'14'` Sd 2° Cl, `'13'` Sd 1° Cl, `'12'` Cabo, `'11'` 3° Sgt, `'10'` 2° Sgt, `'9'` 1° Sgt,
+`'8'` Subtenente, `'7'` Asp. Oficial (✯), `'6'` 2° Ten (✧), `'5'` 1° Ten (✧✧),
+`'4'` Capitão (✧✧✧), `'3'` Major (✵✧✧), `'2'` Ten. Coronel (✵✵✧), `'1'` Coronel (✵✵✵)
 Cargos: `padrao`, `p1` (RH), `p3` (Operacional), `p5` (Comunicação), `estagio`
 
 ### `server/models/User.ts`
@@ -94,7 +97,7 @@ name           String   required
 rg             String   default: ''
 role           'admin' | 'supervisor' | 'officer'  default: 'officer'
 cargo          'padrao' | 'p1' | 'p3' | 'p5' | 'estagio'  default: 'padrao'
-graduacao      String   enum de GRADUACAO_VALUES  default: 'pm'
+graduacao      String   enum de GRADUACAO_VALUES  default: '14'
 dataPromocao   Date     default: null
 cursos         [ObjectId]  ref: 'Course'  default: []
 advertencias   [{ descricao, data, aplicadoPor }]  max 3 (validator)  default: []
@@ -111,7 +114,7 @@ Export: `const User = mongoose.models.User || mongoose.model('User', UserSchema)
 
 ### `server/plugins/seed.ts`
 Nitro plugin que roda no boot. Cria usuário admin se não existir:
-- username: `admin` | password: `Admin@123` | role: `admin` | cargo: `p1` | graduacao: `capitao` | rg: `00001` | firstAccess: `true`
+- username: `admin` | password: `Admin@123` | role: `admin` | cargo: `p1` | graduacao: `'4'` (Capitão) | rg: `00001` | firstAccess: `true`
 
 ### `server/api/auth/login.post.ts`
 `POST /api/auth/login` — público (rate limit cobre)
@@ -138,7 +141,7 @@ Retorna: `{ officers: [...] }` com todos os campos exceto `password` e `__v`.
 Ordenado por `name`. Apenas usuários `active: true`.
 
 ### `server/api/users/index.post.ts`
-`POST /api/users` — requer Bearer token · role: `admin`
+`POST /api/users` — requer Bearer token · role: `admin` OU cargo: `p1`
 Body: `{ username, name, rg?, role?, cargo?, graduacao?, dataPromocao?, badge? }`
 Gera senha temporária aleatória: `Pmesp@XXXXXX`.
 Retorna: `{ user: {...}, tempPassword }` — único momento em que a senha temporária é exposta.

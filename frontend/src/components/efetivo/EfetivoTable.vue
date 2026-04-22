@@ -36,7 +36,6 @@
           <!-- Policial -->
           <td class="td-policial">
             <div class="officer-cell">
-              <div class="officer-avatar">{{ getInitials(officer.name) }}</div>
               <div class="officer-info">
                 <span class="officer-display">{{ buildDisplayName(officer.name, officer.rg, officer.graduacao) }}</span>
                 <span class="officer-username">@{{ officer.username }}</span>
