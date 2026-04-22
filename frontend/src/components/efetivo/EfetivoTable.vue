@@ -22,7 +22,7 @@
       <thead>
         <tr>
           <th>Policial</th>
-          <th>Cargo</th>
+          <th>Atribuição</th>
           <th>Graduação</th>
           <th>Última Promoção</th>
           <th class="col-center">PAD</th>

@@ -13,7 +13,7 @@
 
     <div class="main">
       <AppTopbar
-        title="Efetivo"
+        title="Hierarquia"
         breadcrumb="Operacional / Efetivo"
         :current-date="currentDate"
         :current-time="currentTime"
