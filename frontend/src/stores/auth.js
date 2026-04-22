@@ -31,6 +31,23 @@ export const useAuthStore = defineStore('auth', {
       if (!state.user) return null
       return getGraduacao(state.user.graduacao)
     },
+
+    canPostAviso: (state) => {
+      if (!state.user) return false
+      if (state.user.role === 'admin') return true
+      return parseInt(state.user.graduacao) <= 7
+    },
+
+    canPostBoletim: (state) => {
+      if (!state.user) return false
+      return state.user.cargo === 'p1' || state.user.role === 'admin'
+    },
+
+    canEmitir: (state) => {
+      if (!state.user) return false
+      if (state.user.role === 'admin') return true
+      return parseInt(state.user.graduacao) <= 7 || state.user.cargo === 'p1'
+    },
   },
 
   actions: {

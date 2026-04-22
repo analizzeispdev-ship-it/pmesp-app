@@ -4,6 +4,7 @@
       :current-path="route.path"
       :is-admin="auth.isAdmin"
       :is-rh="auth.isRh"
+      :can-emitir="auth.canEmitir"
       :initials="initials"
       :user-name="auth.user?.name || ''"
       :user-rank="auth.graduacaoInfo?.label || roleLabel"
@@ -113,25 +114,73 @@
             </p>
           </div>
         </div>
+
+        <!-- Quadro de Avisos / Boletins -->
+        <div class="quadro-card">
+          <div class="quadro-header">
+            <h3 class="quadro-title">Quadro de Publicações</h3>
+            <RouterLink v-if="auth.canEmitir" to="/emitir-boletim" class="quadro-action">
+              + Emitir
+            </RouterLink>
+          </div>
+
+          <div class="quadro-tabs">
+            <button
+              class="quadro-tab"
+              :class="{ active: quadroTab === 'avisos' }"
+              @click="switchTab('avisos')"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+              </svg>
+              Avisos
+              <span v-if="pub.hasUnseenAvisos && quadroTab !== 'avisos'" class="unseen-dot" />
+            </button>
+            <button
+              class="quadro-tab"
+              :class="{ active: quadroTab === 'boletins' }"
+              @click="switchTab('boletins')"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+              </svg>
+              Boletins Internos
+              <span v-if="pub.hasUnseenBoletins && quadroTab !== 'boletins'" class="unseen-dot" />
+            </button>
+          </div>
+
+          <div class="tab-scroll">
+            <AvisosTab v-if="quadroTab === 'avisos'" :avisos="pub.avisos" :loading="pub.loading" />
+            <BoletinsTab v-else :boletins="pub.boletins" :loading="pub.loading" />
+          </div>
+        </div>
       </main>
     </div>
   </div>
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { RouterLink } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useEfetivoStore } from '@/stores/efetivo'
+import { usePublicacoesStore } from '@/stores/publicacoes'
 import { useClock } from '@/composables/useClock'
 import AppSidebar from '@/components/layout/AppSidebar.vue'
 import AppTopbar from '@/components/layout/AppTopbar.vue'
+import AvisosTab from '@/components/dashboard/AvisosTab.vue'
+import BoletinsTab from '@/components/dashboard/BoletinsTab.vue'
 
 const auth = useAuthStore()
 const efetivo = useEfetivoStore()
+const pub = usePublicacoesStore()
 const route = useRoute()
 const router = useRouter()
 const { currentTime, currentDate } = useClock()
+const quadroTab = ref('avisos')
 
 const firstName = computed(() => auth.user?.name?.split(' ')[0] || 'Policial')
 
@@ -153,6 +202,19 @@ const greeting = computed(() => {
   if (h < 18) return 'Boa tarde!'
   return 'Boa noite!'
 })
+
+onMounted(async () => {
+  await pub.fetchAll()
+  // marca aba ativa como lida imediatamente
+  if (quadroTab.value === 'avisos') pub.markAvisosRead()
+  else pub.markBoletinsRead()
+})
+
+function switchTab(tab) {
+  quadroTab.value = tab
+  if (tab === 'avisos') pub.markAvisosRead()
+  else pub.markBoletinsRead()
+}
 
 function logout() {
   efetivo.clear()
@@ -320,6 +382,98 @@ function logout() {
   font-size: var(--fs-md);
   color: var(--text-soft);
   line-height: var(--lh-relaxed);
+}
+
+/* Quadro de publicações */
+.quadro-card {
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-top: 1.75rem;
+}
+
+.quadro-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.quadro-title {
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-bold);
+  color: var(--text-strong);
+  font-family: var(--font-family-display);
+}
+
+.quadro-action {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--primary);
+  text-decoration: none;
+  padding: 0.3rem 0.8rem;
+  border: 1px solid var(--primary-light);
+  border-radius: 6px;
+  transition: background 0.15s;
+}
+
+.quadro-action:hover {
+  background: var(--surface-brand-soft);
+}
+
+.quadro-tabs {
+  display: flex;
+  gap: 0.25rem;
+  border-bottom: 1px solid var(--border-soft);
+  margin-bottom: 0;
+}
+
+.quadro-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 1rem;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--text-muted);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+  margin-bottom: -1px;
+  font-family: inherit;
+}
+
+.quadro-tab svg {
+  width: 14px;
+  height: 14px;
+}
+
+.quadro-tab:hover {
+  color: var(--text-strong);
+}
+
+.quadro-tab.active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+}
+
+.tab-scroll {
+  max-height: 680px;
+  overflow-y: auto;
+}
+
+.unseen-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  background: var(--error);
+  border-radius: 50%;
+  margin-left: 4px;
+  flex-shrink: 0;
+  vertical-align: middle;
 }
 
 /* Responsive */

@@ -31,6 +31,9 @@ src/
 │   │   ├── BaseBadge.vue           → (a criar) badge de status/role
 │   │   ├── BaseCard.vue            → (a criar) card com sombra e padding padrão
 │   │   └── BaseTable.vue           → (a criar) tabela paginada com slot de colunas
+│   ├── dashboard/
+│   │   ├── AvisosTab.vue          → lista de avisos do quadro de publicações do dashboard
+│   │   └── BoletinsTab.vue        → lista de boletins internos do quadro de publicações do dashboard
 │   ├── gestao/
 │   │   ├── CadastroUsuarioForm.vue → form com nome, RG, username, graduação, cargo; emite `submit` com dados validados; mostra preview do displayName
 │   │   └── SenhaTempCard.vue      → exibe usuário criado + senha temporária com botão copiar + aviso de exibição única
@@ -48,13 +51,15 @@ src/
 ├── router/
 │   └── index.js                    → rotas + guard beforeEach
 ├── stores/
-│   └── auth.js                     → Pinia store de autenticação
+│   ├── auth.js                     → Pinia store de autenticação
+│   └── publicacoes.js              → Pinia store de avisos e boletins internos
 └── views/
     ├── LoginView.vue
     ├── ChangePasswordView.vue
     ├── DashboardView.vue
     ├── EfetivoView.vue
-    └── GestaoUsuariosView.vue
+    ├── GestaoUsuariosView.vue
+    └── EmitirBoletimView.vue
 ```
 
 ---
@@ -112,8 +117,11 @@ Store Pinia `auth`. Persiste em `localStorage` (chaves: `pmesp_token`, `pmesp_us
 - `isAdmin` → `user.role === 'admin'`
 - `isRh` → `user.cargo === 'p1' || user.role === 'admin'`
 - `needsPasswordChange` → `!!user.firstAccess`
-- `displayName` → `buildDisplayName(user.name, user.rg, user.graduacao)` — ex: `✯ | Hugo Amorim - 5436`
+- `displayName` → `buildDisplayName(user.name, user.rg, user.graduacao)`
 - `graduacaoInfo` → objeto completo da graduação atual (`{ label, nickPrefix, roleName, grupo }`)
+- `canPostAviso` → `parseInt(user.graduacao) <= 7` ou admin (Asp. Oficial até Coronel)
+- `canPostBoletim` → `user.cargo === 'p1'` ou admin
+- `canEmitir` → canPostAviso OU canPostBoletim
 
 **Actions:**
 - `setAuth(token, user)` → persiste token e user
@@ -156,12 +164,15 @@ Histórico: `createWebHistory()`.
 | `/` | `Dashboard` | `DashboardView` | `requiresAuth: true` |
 | `/efetivo` | `Efetivo` | `EfetivoView` | `requiresAuth: true` |
 | `/gestao/usuarios` | `GestaoUsuarios` | `GestaoUsuariosView` | `requiresAuth: true, requiresCargo: 'p1'` |
+| `/emitir-boletim` | `EmitirBoletim` | `EmitirBoletimView` | `requiresAuth: true, requiresEmitir: true` |
 
 **Guard `beforeEach`:**
 1. Rota pública → passa
 2. Sem token → `/login`
 3. `firstAccess=true` + não é `ChangePassword` → `/primeiro-acesso`
 4. `firstAccess=false` + é `ChangePassword` → `/`
+5. `requiresCargo: 'p1'` → cargo !== 'p1' e não admin → `/`
+6. `requiresEmitir: true` → `parseInt(graduacao) > 7` e cargo !== 'p1' e não admin → `/`
 
 ---
 
@@ -194,6 +205,7 @@ Layout: sidebar fixa + área principal (topbar + conteúdo), com linguagem visua
 **Topbar:** metadados da página, relógio e usuário logado.
 **Conteúdo:** banner de boas-vindas em card claro, 4 cards de stats (placeholder `—`) e info box de implantação com estilo institucional claro.
 **Logout:** `auth.logout()` → `router.push('/login')`.
+**Quadro de Publicações:** seção abaixo do info-box com dois tabs (`quadroTab: ref('avisos')`). Usa `AvisosTab` e `BoletinsTab`. Botão "+ Emitir" (link para `/emitir-boletim`) visível apenas para `auth.canEmitir`. Carrega dados via `pub.fetchAll()` no `onMounted`.
 
 ### `src/components/layout/AppSidebar.vue`
 Sidebar institucional fixa do dashboard.
@@ -207,6 +219,28 @@ Sidebar institucional fixa do dashboard.
 Store Pinia `gestao`. Gerencia criação de usuários via `POST /api/users`.
 **State:** `loading`, `error`, `lastCreated: { user, tempPassword } | null`
 **Action:** `criarUsuario(data)` → chama API e popula `lastCreated`; `resetLastCreated()` limpa para novo cadastro.
+
+### `src/stores/publicacoes.js`
+Store Pinia `publicacoes`. Gerencia avisos e boletins internos.
+**State:** `avisos[]`, `boletins[]`, `loading`, `error`, `submitting`, `submitError`
+**Actions:**
+- `fetchAll()` → `GET /api/publicacoes` → popula `avisos` e `boletins`
+- `criarPublicacao(payload)` → `POST /api/publicacoes` → insere no topo da lista correspondente
+
+### `src/components/dashboard/AvisosTab.vue`
+Lista de avisos para o Quadro de Publicações do dashboard.
+Props: `avisos[]`, `loading`. Exibe card com autor (prefixo + nome + RG), data e conteúdo. Borda esquerda dourada (`--warning`).
+
+### `src/components/dashboard/BoletinsTab.vue`
+Lista de boletins internos para o Quadro de Publicações do dashboard.
+Props: `boletins[]`, `loading`. Exibe card com badge "BOLETIM INTERNO", 4 partes formatadas e linha "Assina: nome". Borda esquerda azul (`--primary`).
+
+### `src/views/EmitirBoletimView.vue`
+Rota `/emitir-boletim` — acesso restrito a `canEmitir`.
+Page tabs: "Boletim Interno" (visível se `canPostBoletim`) e "Aviso" (visível se `canPostAviso`).
+Boletim: 4 textareas (parte1–4) + preview "Assina: nome" + submit.
+Aviso: título + textarea conteúdo + submit.
+Tab inicial: `boletim` se `canPostBoletim`, senão `aviso`.
 
 ### `src/views/GestaoUsuariosView.vue`
 Acessível apenas para `cargo: 'p1'` (RH) e `admin`. Rota `/gestao/usuarios` com `requiresCargo: 'p1'` no router guard.

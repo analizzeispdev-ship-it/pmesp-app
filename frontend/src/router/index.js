@@ -32,6 +32,12 @@ const routes = [
     component: () => import('@/views/GestaoUsuariosView.vue'),
     meta: { requiresAuth: true, requiresCargo: 'p1' },
   },
+  {
+    path: '/emitir-boletim',
+    name: 'EmitirBoletim',
+    component: () => import('@/views/EmitirBoletimView.vue'),
+    meta: { requiresAuth: true, requiresEmitir: true },
+  },
 ]
 
 const router = createRouter({
@@ -56,6 +62,12 @@ router.beforeEach((to) => {
 
   if (to.meta.requiresCargo && auth.user?.cargo !== to.meta.requiresCargo && auth.user?.role !== 'admin') {
     return '/'
+  }
+
+  if (to.meta.requiresEmitir) {
+    const grad = parseInt(auth.user?.graduacao)
+    const canEmitir = auth.user?.role === 'admin' || auth.user?.cargo === 'p1' || (!isNaN(grad) && grad <= 7)
+    if (!canEmitir) return '/'
   }
 
   return true

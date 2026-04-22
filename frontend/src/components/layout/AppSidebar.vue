@@ -68,9 +68,11 @@
         <span class="badge-soon">Em breve</span>
       </a>
 
-      <template v-if="isRh">
+      <template v-if="isRh || canEmitir">
         <div class="nav-section">Gestão de Pessoal</div>
+
         <RouterLink
+          v-if="isRh"
           to="/gestao/usuarios"
           class="nav-item"
           :class="{ active: currentPath === '/gestao/usuarios' }"
@@ -82,6 +84,22 @@
             <line x1="23" y1="11" x2="17" y2="11" />
           </svg>
           <span>Cadastrar Policial</span>
+        </RouterLink>
+
+        <RouterLink
+          v-if="canEmitir"
+          to="/emitir-boletim"
+          class="nav-item"
+          :class="{ active: currentPath === '/emitir-boletim' }"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+            <polyline points="14 2 14 8 20 8" />
+            <line x1="16" y1="13" x2="8" y2="13" />
+            <line x1="12" y1="17" x2="12" y2="17" />
+            <line x1="12" y1="17" x2="12.01" y2="17" />
+          </svg>
+          <span>Emitir Boletim</span>
         </RouterLink>
       </template>
 
@@ -129,6 +147,10 @@ defineProps({
     default: false,
   },
   isRh: {
+    type: Boolean,
+    default: false,
+  },
+  canEmitir: {
     type: Boolean,
     default: false,
   },

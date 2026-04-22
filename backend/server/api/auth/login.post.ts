@@ -24,7 +24,7 @@ export default defineEventHandler(async (event) => {
 
   const config = useRuntimeConfig()
   const token = signToken(
-    { id: user._id.toString(), username: user.username, role: user.role, cargo: user.cargo },
+    { id: user._id.toString(), username: user.username, role: user.role, cargo: user.cargo, graduacao: user.graduacao },
     config.jwtSecret
   )
 

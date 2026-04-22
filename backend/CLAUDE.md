@@ -20,13 +20,17 @@ server/
 │   ├── users/
 │   │   ├── index.get.ts
 │   │   └── index.post.ts
-│   └── efetivo/
-│       └── index.get.ts
+│   ├── efetivo/
+│   │   └── index.get.ts
+│   └── publicacoes/
+│       ├── index.get.ts
+│       └── index.post.ts
 ├── constants/
 │   └── graduacoes.ts
 ├── services/         → Classes estáticas com toda lógica de negócio (a criar conforme crescimento)
 ├── models/
-│   └── User.ts
+│   ├── User.ts
+│   └── Publicacao.ts
 ├── middleware/
 │   ├── 01.cors.ts
 │   └── 02.rateLimit.ts
@@ -58,7 +62,7 @@ Flag `connected` evita reconexão. Chamar `await connectDB()` no início de cada
 
 ### `server/utils/jwt.ts`
 Duas funções puras: `signToken(payload, secret)` → JWT 8h | `verifyToken(token, secret)` → JwtPayload.
-Interface: `JwtPayload { id, username, role, cargo }`.
+Interface: `JwtPayload { id, username, role, cargo, graduacao }`.
 Secret sempre vem de `useRuntimeConfig().jwtSecret` — nunca hardcodar.
 
 ### `server/utils/rateLimit.ts`
@@ -139,6 +143,35 @@ Ordenado por `name`.
 `GET /api/efetivo` — requer Bearer token (qualquer role)
 Retorna: `{ officers: [...] }` com todos os campos exceto `password` e `__v`.
 Ordenado por `name`. Apenas usuários `active: true`.
+
+### `server/models/Publicacao.ts`
+Schema Mongoose:
+```
+tipo           'aviso' | 'boletim'  required
+titulo         String   default: ''
+conteudo       String   default: ''
+parte1–parte4  String   default: 'Sem alterações.'
+autorId        ObjectId ref: 'User'  required
+autorNome      String   required
+autorRg        String   default: ''
+autorGraduacao String   default: ''
+autorCargo     String   default: ''
+ativo          Boolean  default: true
+timestamps: true
+```
+
+### `server/api/publicacoes/index.get.ts`
+`GET /api/publicacoes` — requer Bearer token (qualquer role)
+Retorna: `{ avisos: [...], boletins: [...] }` — ambos ordenados por `createdAt` desc.
+Avisos: limit 50. Boletins: limit 20.
+
+### `server/api/publicacoes/index.post.ts`
+`POST /api/publicacoes` — requer Bearer token
+Body aviso: `{ tipo: 'aviso', titulo, conteudo }`
+Body boletim: `{ tipo: 'boletim', parte1?, parte2?, parte3?, parte4? }`
+Autorização: aviso → `parseInt(graduacao) <= 7` ou admin. Boletim → `cargo === 'p1'` ou admin.
+Snapshot do autor buscado no DB e salvo em `autorNome/Rg/Graduacao/Cargo`.
+Retorna: `{ publicacao }`
 
 ### `server/api/users/index.post.ts`
 `POST /api/users` — requer Bearer token · role: `admin` OU cargo: `p1`
