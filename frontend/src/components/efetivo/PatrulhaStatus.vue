@@ -44,6 +44,7 @@ const ultimaLabel = computed(() => {
 .patrulha-status {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 0.25rem;
 }
 

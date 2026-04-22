@@ -41,6 +41,7 @@ const tooltip = computed(() => {
 <style scoped>
 .pad-indicator {
   display: flex;
+  justify-content: center;
   align-items: center;
   gap: 4px;
 }

@@ -38,6 +38,12 @@ const routes = [
     component: () => import('@/views/EmitirBoletimView.vue'),
     meta: { requiresAuth: true, requiresEmitir: true },
   },
+  {
+    path: '/gestao/efetivo',
+    name: 'GestaoEfetivo',
+    component: () => import('@/views/GestaoEfetivoView.vue'),
+    meta: { requiresAuth: true, requiresCargo: 'p1' },
+  },
 ]
 
 const router = createRouter({

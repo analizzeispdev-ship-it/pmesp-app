@@ -21,7 +21,6 @@
   --success-bg: #f0fdf4;
   --text: #1e293b;
   --text-muted: #64748b;
-  --border: #e2e8f0;
 
   --surface-soft: #f9fafb;
   --surface-subtle: #f3f4f6;
@@ -99,8 +98,9 @@
   --text-muted: #9ca3af;
   --text-soft: #cbd5e1;
   --text-faint: #94a3b8;
-  --border: #374151;
+  --border: #8c9097;
   --border-soft: #4b5563;
+  --primary: #225eb8;
 }
 
 html, body {

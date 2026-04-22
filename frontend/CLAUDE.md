@@ -30,13 +30,18 @@ src/
 │   │   ├── BaseSpinner.vue         → (a criar) spinner de carregamento
 │   │   ├── BaseBadge.vue           → (a criar) badge de status/role
 │   │   ├── BaseCard.vue            → (a criar) card com sombra e padding padrão
-│   │   └── BaseTable.vue           → (a criar) tabela paginada com slot de colunas
+│   │   └── BaseTable.vue           → tabela base reutilizável; props: loading, isEmpty, loadingText, emptyText, dimmed; slots: head (th), body (tr), empty-icon
 │   ├── dashboard/
 │   │   ├── AvisosTab.vue          → lista de avisos do quadro de publicações do dashboard
 │   │   └── BoletinsTab.vue        → lista de boletins internos do quadro de publicações do dashboard
 │   ├── gestao/
 │   │   ├── CadastroUsuarioForm.vue → form com nome, RG, username, graduação, cargo; emite `submit` com dados validados; mostra preview do displayName
-│   │   └── SenhaTempCard.vue      → exibe usuário criado + senha temporária com botão copiar + aviso de exibição única
+│   │   ├── SenhaTempCard.vue      → exibe usuário criado + senha temporária com botão copiar + aviso de exibição única
+│   │   ├── EfetivoAtivoTab.vue    → tabela com efetivo ativo; emite `promover`, `advertencia`, `exonerar` por officer
+│   │   ├── ExoneradosTab.vue      → tabela somente-leitura de policiais exonerados (active: false)
+│   │   ├── PromoverModal.vue      → modal overlay; select de nova graduação com grupos; emite `confirm(novaGraduacao)`
+│   │   ├── AdvertenciaModal.vue   → modal overlay; textarea motivo + contador PAD; emite `confirm(descricao)`
+│   │   └── ExonerarModal.vue      → modal overlay de confirmação destrutiva; emite `confirm`
 │   ├── efetivo/
 │   │   ├── EfetivoTable.vue        → tabela de policiais com avatar, cargo, graduação, PAD, cursos, patrulha
 │   │   ├── PadIndicator.vue        → 3 quadradinhos coloridos (0=vazio, 1=dourado, 2=âmbar, 3=vermelho)
@@ -59,7 +64,8 @@ src/
     ├── DashboardView.vue
     ├── EfetivoView.vue
     ├── GestaoUsuariosView.vue
-    └── EmitirBoletimView.vue
+    ├── EmitirBoletimView.vue
+    └── GestaoEfetivoView.vue
 ```
 
 ---
@@ -165,6 +171,7 @@ Histórico: `createWebHistory()`.
 | `/efetivo` | `Efetivo` | `EfetivoView` | `requiresAuth: true` |
 | `/gestao/usuarios` | `GestaoUsuarios` | `GestaoUsuariosView` | `requiresAuth: true, requiresCargo: 'p1'` |
 | `/emitir-boletim` | `EmitirBoletim` | `EmitirBoletimView` | `requiresAuth: true, requiresEmitir: true` |
+| `/gestao/efetivo` | `GestaoEfetivo` | `GestaoEfetivoView` | `requiresAuth: true, requiresCargo: 'p1'` |
 
 **Guard `beforeEach`:**
 1. Rota pública → passa

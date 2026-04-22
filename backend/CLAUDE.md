@@ -22,9 +22,16 @@ server/
 │   │   └── index.post.ts
 │   ├── efetivo/
 │   │   └── index.get.ts
-│   └── publicacoes/
-│       ├── index.get.ts
-│       └── index.post.ts
+│   ├── publicacoes/
+│   │   ├── index.get.ts
+│   │   └── index.post.ts
+│   └── gestao/
+│       └── efetivo/
+│           ├── index.get.ts
+│           └── [id]/
+│               ├── promover.patch.ts
+│               ├── advertencia.patch.ts
+│               └── exonerar.patch.ts
 ├── constants/
 │   └── graduacoes.ts
 ├── services/         → Classes estáticas com toda lógica de negócio (a criar conforme crescimento)
@@ -172,6 +179,26 @@ Body boletim: `{ tipo: 'boletim', parte1?, parte2?, parte3?, parte4? }`
 Autorização: aviso → `parseInt(graduacao) <= 7` ou admin. Boletim → `cargo === 'p1'` ou admin.
 Snapshot do autor buscado no DB e salvo em `autorNome/Rg/Graduacao/Cargo`.
 Retorna: `{ publicacao }`
+
+### `server/api/gestao/efetivo/index.get.ts`
+`GET /api/gestao/efetivo` — requer Bearer + cargo p1 ou admin
+Query: `?exonerado=1` → retorna inativos. Sem query → retorna ativos.
+Exclui admins. Ordenado por `{ graduacao: 1, name: 1 }`.
+Retorna: `{ officers: [...] }`
+
+### `server/api/gestao/efetivo/[id]/promover.patch.ts`
+`PATCH /api/gestao/efetivo/:id/promover` — requer p1 ou admin
+Body: `{ graduacao }` — deve ser valor válido de GRADUACAO_VALUES.
+Atualiza `graduacao` + `dataPromocao = now`. Retorna `{ officer }`.
+
+### `server/api/gestao/efetivo/[id]/advertencia.patch.ts`
+`PATCH /api/gestao/efetivo/:id/advertencia` — requer p1 ou admin
+Body: `{ descricao }`. Máximo 3 advertências — erro 400 se já tiver 3.
+Push `{ descricao, data: now, aplicadoPor: payload.id }`. Retorna `{ officer }`.
+
+### `server/api/gestao/efetivo/[id]/exonerar.patch.ts`
+`PATCH /api/gestao/efetivo/:id/exonerar` — requer p1 ou admin
+Não permite exonerar a si mesmo. Seta `active: false`. Retorna `{ officer }`.
 
 ### `server/api/users/index.post.ts`
 `POST /api/users` — requer Bearer token · role: `admin` OU cargo: `p1`
