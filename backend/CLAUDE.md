@@ -31,6 +31,10 @@ server/
 │   │   └── [id]/
 │   │       ├── encerrar.patch.ts
 │   │       └── tripulacao.patch.ts
+│   ├── apreensoes/
+│   │   ├── index.get.ts     → GET /api/apreensoes — stats do mês (totais + rankGeral + rankPorItem)
+│   │   ├── index.post.ts    → POST /api/apreensoes — registrar apreensão (usuario deve estar na viatura)
+│   │   └── relatorio.get.ts → GET /api/apreensoes/relatorio — last 15 viaturas com apreensoes (p3/admin)
 │   └── gestao/
 │       └── efetivo/
 │           ├── index.get.ts
@@ -40,11 +44,13 @@ server/
 │               └── exonerar.patch.ts
 ├── constants/
 │   └── graduacoes.ts
-├── services/         → Classes estáticas com toda lógica de negócio (a criar conforme crescimento)
+├── services/
+│   └── ApreensaoService.ts  → getStats(), create(data), getRelatorio()
 ├── models/
 │   ├── User.ts
 │   ├── Publicacao.ts
-│   └── Viatura.ts
+│   ├── Viatura.ts
+│   └── Apreensao.ts         → viaturaId, viaturaPrefixo, membros[], 7 campos numéricos de itens, origem, registradoPorId
 ├── middleware/
 │   ├── 01.cors.ts
 │   └── 02.rateLimit.ts
@@ -53,7 +59,8 @@ server/
 └── utils/
     ├── db.ts
     ├── jwt.ts
-    └── rateLimit.ts
+    ├── rateLimit.ts
+    └── auth.ts              → requireAuth(event) → JwtPayload; usado nos novos handlers
 ```
 
 ---
@@ -241,6 +248,52 @@ Body: `{ motorista, chefeDeBarca, auxiliar1?, auxiliar2?, auxiliar3? }`
 Calcula `addedIds` (novos na viatura) e `removedIds` (saíram). Verifica `addedIds` não estão patrulhando em outra viatura.
 `updateMany` removedIds → `patrulhando: false`; addedIds → `patrulhando: true, ultimaPatrulha: now`.
 Retorna `{ viatura }` populada.
+
+### `server/utils/auth.ts`
+`requireAuth(event)` — extrai e verifica Bearer token; retorna `JwtPayload`. Lança 401 se ausente/inválido.
+Usado nos novos endpoints de apreensões. Handlers antigos ainda fazem inline auth.
+
+### `server/models/Apreensao.ts`
+Schema Mongoose:
+```
+viaturaId      ObjectId   ref: 'Viatura'  required
+viaturaPrefixo String     required
+membros        [{ userId, name, rg, graduacao }]  snapshot da tripulação no momento
+armasFogo      Number     default: 0
+drogas         Number     default: 0
+explosivos     Number     default: 0
+itensRoubados  Number     default: 0
+armasBrancas   Number     default: 0
+dinheiroSujo   Number     default: 0
+municao        Number     default: 0
+origem         String     default: ''
+registradoPorId ObjectId  ref: 'User'  required
+timestamps: true
+```
+Indexes: `{ createdAt: -1 }`, `{ viaturaId: 1 }`.
+
+### `server/services/ApreensaoService.ts`
+- `getStats(mes, ano)` → agrega período: totais por item + rankGeral (top 10 por total) + rankPorItem (top 5 por item)
+- `getPatrulhaRank(mes, ano)` → top 10 officers por minutos patrulhados no período; usa viaturas que se sobrepõem ao mês
+- `create({ viaturaId, userId, items, origem })` → verifica usuário na viatura via `$or` query, snapshot crew, cria Apreensao
+- `getRelatorio()` → last 15 viaturas (qualquer status) + apreensoes de cada uma
+
+### `server/api/apreensoes/index.get.ts`
+`GET /api/apreensoes?mes=4&ano=2026` — qualquer role autenticado; query params opcionais (default: mês atual)
+Retorna: `{ totais, rankGeral, rankPorItem }`
+
+### `server/api/apreensoes/rank-patrulha.get.ts`
+`GET /api/apreensoes/rank-patrulha?mes=4&ano=2026` — qualquer role autenticado
+Retorna: `{ rank: [{ userId, name, rg, graduacao, total: minutos }] }` top 10 por minutos patrulhados no período
+
+### `server/api/apreensoes/index.post.ts`
+`POST /api/apreensoes` — qualquer role autenticado; backend verifica que user está na viatura ativa
+Body: `{ viaturaId, origem?, armasFogo?, drogas?, explosivos?, itensRoubados?, armasBrancas?, dinheiroSujo?, municao? }`
+Valida: ao menos um item > 0. Retorna `{ apreensao }`.
+
+### `server/api/apreensoes/relatorio.get.ts`
+`GET /api/apreensoes/relatorio` — requer cargo p3 ou admin
+Retorna: `{ viaturas: [{ viaturaId, prefixo, status, abertaEm, encerradaEm, apreensoes[] }] }`
 
 ### `server/api/viaturas/[id]/encerrar.patch.ts`
 `PATCH /api/viaturas/:id/encerrar` — requer p1 ou admin

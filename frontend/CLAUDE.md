@@ -26,7 +26,7 @@ src/
 │   │   ├── AppToast.vue            → toast global: fixed top-center, slide+fade transition, progress bar CSS-driven; consome useToastStore
 │   │   ├── BaseButton.vue          → (a criar) variantes: primary, danger, ghost; prop loading
 │   │   ├── BaseInput.vue           → (a criar) label, erro, slot ícone, prop type
-│   │   ├── BaseModal.vue           → (a criar) overlay, título, slot conteúdo, emit close
+│   │   ├── BaseModal.vue           → overlay, container, header (title+subtitle+slot header-icon+close), body, footer (centra botões mobile); props: open, title, subtitle, maxWidth, flush; slots: header-icon, default, footer; estilos comuns de btn-ghost/btn-primary/btn-danger via :deep() no footer
 │   │   ├── BaseAlert.vue           → (a criar) variantes: error, success, warning, info
 │   │   ├── BaseSpinner.vue         → (a criar) spinner de carregamento
 │   │   ├── BaseBadge.vue           → (a criar) badge de status/role
@@ -48,6 +48,11 @@ src/
 │   │   ├── AbrirViaturaModal.vue   → modal form: prefixo, observação, 5 selects de cargo; emite confirm(payload)
 │   │   ├── EncerrarViaturaModal.vue → modal confirmação destrutiva; mostra crew; emite confirm
 │   │   └── EditarTripulacaoModal.vue → modal pré-populado com crew atual; selects filtrados; marca "EM OUTRA BARCA"; emite confirm(crew)
+│   ├── apreensoes/
+│   │   ├── TotaisCard.vue          → card de totais mensais por item; props: totais, loading; 7 itens em grid responsivo
+│   │   ├── RankList.vue            → lista de rank reutilizável; props: items[], loading, formatter(Function); medalhas gold/silver/bronze nos top 3; formatter converte total (ex: minutos → "Xh Ymin")
+│   │   ├── AdicionarApreensaoModal.vue → modal form: viatura (apenas a do user), origem, grid de 7 inputs numéricos; valida ≥1 item; emite confirm(payload)
+│   │   └── RelatorioViaturasModal.vue  → modal lista last 15 viaturas com dropdown de apreensoes; apenas P3/admin abre
 │   ├── efetivo/
 │   │   ├── EfetivoTable.vue        → tabela de policiais com avatar, cargo, graduação, PAD, cursos, patrulha
 │   │   ├── PadIndicator.vue        → 3 quadradinhos coloridos (0=vazio, 1=dourado, 2=âmbar, 3=vermelho)
@@ -73,7 +78,8 @@ src/
     ├── GestaoUsuariosView.vue
     ├── EmitirBoletimView.vue
     ├── GestaoEfetivoView.vue
-    └── ViaturaView.vue
+    ├── ViaturaView.vue
+    └── ApreensaoView.vue
 ```
 
 ---
@@ -130,6 +136,7 @@ Store Pinia `auth`. Persiste em `localStorage` (chaves: `pmesp_token`, `pmesp_us
 - `isAuthenticated` → `!!token`
 - `isAdmin` → `user.role === 'admin'`
 - `isRh` → `user.cargo === 'p1' || user.role === 'admin'`
+- `isP3` → `user.cargo === 'p3' || user.role === 'admin'`
 - `needsPasswordChange` → `!!user.firstAccess`
 - `displayName` → `buildDisplayName(user.name, user.rg, user.graduacao)`
 - `graduacaoInfo` → objeto completo da graduação atual (`{ label, nickPrefix, roleName, grupo }`)
@@ -181,6 +188,7 @@ Histórico: `createWebHistory()`.
 | `/emitir-boletim` | `EmitirBoletim` | `EmitirBoletimView` | `requiresAuth: true, requiresEmitir: true` |
 | `/gestao/efetivo` | `GestaoEfetivo` | `GestaoEfetivoView` | `requiresAuth: true, requiresCargo: 'p1'` |
 | `/viaturas` | `Viaturas` | `ViaturaView` | `requiresAuth: true, requiresCargo: 'p1'` |
+| `/apreensoes` | `Apreensoes` | `ApreensaoView` | `requiresAuth: true` |
 
 **Guard `beforeEach`:**
 1. Rota pública → passa
@@ -231,6 +239,17 @@ Sidebar institucional fixa do dashboard.
 - Exibe branding PMESP, grupos de navegação, itens desabilitados "Em breve" e rodapé do usuário.
 - Cores e tipografia aplicadas por variáveis CSS globais (tokens), sem valores fixos de tema.
 
+### `src/constants/apreensoes.js`
+`ITENS_APREENSAO[]` — `{ key, label }` para os 7 tipos: armasFogo, drogas, explosivos, itensRoubados, armasBrancas, dinheiroSujo, municao.
+
+### `src/stores/apreensoes.js`
+Store Pinia `apreensoes`. Gerencia stats e registro de apreensões.
+**State:** `totais`, `rankGeral[]`, `rankPorItem{}`, `loading`, `error`, `actionLoading`, `actionError`, `relatorio[]`, `relatorioLoading`
+**Actions:**
+- `fetchStats(mes, ano)` → `GET /api/apreensoes?mes&ano` + `GET /api/apreensoes/rank-patrulha?mes&ano` em paralelo → popula totais, ranks apreensoes e rankPatrulha
+- `registrar(payload)` → `POST /api/apreensoes` → registra
+- `fetchRelatorio()` → `GET /api/apreensoes/relatorio` → last 15 viaturas com apreensões (p3/admin)
+
 ### `src/stores/viaturas.js`
 Store Pinia `viaturas`. Gerencia viaturas em patrulha.
 **State:** `ativas[]`, `loading`, `error`, `actionLoading`, `actionError`
@@ -266,6 +285,17 @@ Page tabs: "Boletim Interno" (visível se `canPostBoletim`) e "Aviso" (visível 
 Boletim: 4 textareas (parte1–4) + preview "Assina: nome" + submit.
 Aviso: título + textarea conteúdo + submit.
 Tab inicial: `boletim` se `canPostBoletim`, senão `aviso`.
+
+### `src/views/ApreensaoView.vue`
+Rota `/apreensoes` — acesso para todos autenticados.
+Layout: AppSidebar + AppTopbar. Conteúdo:
+- `TotaisCard` com totais do mês
+- Seção de rankings: botão "Registrar Apreensão" (todos) + botão "Relatório de Viaturas" (isP3 only)
+- Filtro de mês: `<select>` com últimos 13 meses; ao trocar re-chama `fetchStats(mes, ano)`
+- `ranks-top`: 2 cards lado a lado — RankGeral + RankPatrulha (horas, formatter `formatMinutos`)
+- `ranks-items`: grid 2-col com 7 RankList por item de apreensão
+- `userViatura` computed: viatura ativa onde o user está na tripulação (via viaturas.ativas)
+- Usa `useApreensaoStore` + `useViaturasStore`
 
 ### `src/views/ViaturaView.vue`
 Rota `/viaturas` — acesso P1 + admin. Gerencia viaturas abertas.

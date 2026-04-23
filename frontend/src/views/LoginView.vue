@@ -30,12 +30,12 @@
 
           <h1 class="heading">
             <span class="h-black">Acesso</span>
-            <span class="h-blue">Institucional</span>
+            <span class="h-blue">Operacional</span>
           </h1>
 
           <p class="heading-sub">
             Autenticação restrita ao efetivo autorizado da Polícia Militar Brasileira.
-            Seu vínculo é validado diretamente no sistema institucional do comando.
+            Seu vínculo é validado diretamente no sistema institucional do batalhão.
           </p>
 
           <ul class="features">
@@ -62,7 +62,7 @@
                   <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
                 </svg>
               </span>
-              <span>Funcional e patente atribuídos após aprovação</span>
+              <span>Funcional e patente atribuídos na criação de login</span>
             </li>
           </ul>
         </div>
@@ -96,7 +96,7 @@
           </svg>
 
           <div class="radar-badge">
-            <img src="@/assets/images/logo-pmsp.png" alt="Logo PMESP" />
+            <img src="@/assets/images/logo_ft.png" alt="Logo PMESP" />
           </div>
         </div>
       </div>
@@ -187,20 +187,20 @@
             <ul class="ver-list">
               <li>Suas credenciais serão <strong>verificadas</strong> no banco de dados institucional.</li>
               <li>Só é permitido acesso a membros <strong>ativos</strong> da corporação.</li>
-              <li>Novos usuários ficam <strong>pendentes</strong> até a aprovação do comando.</li>
+              <li>Novo acesso mediante avaliação de necessidade por parte do setor RH.</li>
             </ul>
           </div>
 
           <!-- Aviso legal -->
-          <div class="card-warning">
+          <div class="card-warning" style="font-weight: 500;">
             Acesso monitorado e auditado. Uso indevido, compartilhamento de credenciais ou tentativas de invasão estão sujeitos às sanções previstas no regulamento disciplinar.
           </div>
 
-          <!-- Footer do card -->
+          
+        </div><!-- Footer do card -->
           <p class="card-footer-line">
             CANAL CRIPTOGRAFADO • SESSÃO TEMPORÁRIA • CONEXÃO SEGURA
           </p>
-        </div>
       </div>
     </div>
   </div>
@@ -573,6 +573,8 @@ async function handleLogin() {
   width: 460px;
   flex-shrink: 0;
   display: flex;
+  flex-direction: column;
+  gap: 1.5em;
   align-items: center;
   justify-content: center;
   padding: 2rem 3rem 2rem 1rem;

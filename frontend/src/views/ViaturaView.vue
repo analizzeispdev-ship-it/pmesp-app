@@ -130,6 +130,10 @@ watch(() => store.actionError, (err) => {
   if (err) toast.show(err, 'error')
 })
 
+watch(modalAbrir, (val) => {
+  if (val) gestaoEfetivo.fetchAtivos()
+})
+
 const initials = computed(() => {
   const parts = (auth.user?.name || 'U').split(' ')
   return parts.length >= 2 ? parts[0][0] + parts[parts.length - 1][0] : parts[0][0]

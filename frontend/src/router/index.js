@@ -50,6 +50,12 @@ const routes = [
     component: () => import('@/views/ViaturaView.vue'),
     meta: { requiresAuth: true, requiresCargo: 'p1' },
   },
+  {
+    path: '/apreensoes',
+    name: 'Apreensoes',
+    component: () => import('@/views/ApreensaoView.vue'),
+    meta: { requiresAuth: true },
+  },
 ]
 
 const router = createRouter({

@@ -48,6 +48,8 @@ export const useAuthStore = defineStore('auth', {
       if (state.user.role === 'admin') return true
       return parseInt(state.user.graduacao) <= 7 || state.user.cargo === 'p1'
     },
+
+    isP3: (state) => state.user?.cargo === 'p3' || state.user?.role === 'admin',
   },
 
   actions: {
