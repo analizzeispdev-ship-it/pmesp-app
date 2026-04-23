@@ -7,6 +7,7 @@ export const useApreensaoStore = defineStore('apreensoes', {
     rankGeral: [],
     rankPorItem: {},
     rankPatrulha: [],
+    meusTurnos: null,
     loading: false,
     error: null,
     actionLoading: false,
@@ -33,6 +34,16 @@ export const useApreensaoStore = defineStore('apreensoes', {
         this.error = e.message || 'Erro ao carregar dados'
       } finally {
         this.loading = false
+      }
+    },
+
+    async fetchMeusTurnos(mes, ano) {
+      try {
+        const api = useApi()
+        const data = await api.get(`/api/viaturas/meus-turnos?mes=${mes}&ano=${ano}`)
+        this.meusTurnos = data.turnos
+      } catch {
+        this.meusTurnos = 0
       }
     },
 

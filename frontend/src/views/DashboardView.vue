@@ -30,10 +30,7 @@
             <p>{{ greeting }} Você está acessando o Sistema de Gerenciamento da PMESP.</p>
           </div>
           <div class="welcome-badge">
-            <svg viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg" style="width:60px;opacity:0.15">
-              <path d="M50 4L6 24V60C6 86 26 107 50 118C74 107 94 86 94 60V24L50 4Z" fill="white" />
-              <path d="M50 28L54.8 43H70L58 51.5L62.8 66.5L50 58L37.2 66.5L42 51.5L30 43H45.2L50 28Z" fill="white" />
-            </svg>
+            <img src="@/assets/images/logo_ft.png" alt="Logo PMESP" />
           </div>
         </div>
 
@@ -49,7 +46,7 @@
               </svg>
             </div>
             <div class="stat-info">
-              <span class="stat-value">—</span>
+              <span class="stat-value">{{ efeivoEmServico === null ? '—' : efeivoEmServico }}</span>
               <span class="stat-label">Efetivo de Serviço</span>
             </div>
           </div>
@@ -57,14 +54,13 @@
           <div class="stat-card">
             <div class="stat-icon red">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-                <line x1="12" y1="9" x2="12" y2="13" />
-                <line x1="12" y1="17" x2="12.01" y2="17" />
+                <circle cx="12" cy="12" r="10" />
+                <polyline points="12 6 12 12 16 14" />
               </svg>
             </div>
             <div class="stat-info">
-              <span class="stat-value">—</span>
-              <span class="stat-label">Ocorrências Abertas</span>
+              <span class="stat-value">{{ horasPatrulhaUsuario === null ? '—' : horasPatrulhaUsuario }}</span>
+              <span class="stat-label">Minhas Horas no Mês</span>
             </div>
           </div>
 
@@ -86,14 +82,15 @@
           <div class="stat-card">
             <div class="stat-icon gold">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                <polyline points="14 2 14 8 20 8" />
-                <line x1="16" y1="13" x2="8" y2="13" />
+                <rect x="1" y="3" width="15" height="13" rx="2" />
+                <path d="M16 8h4l3 3v5h-7V8z" />
+                <circle cx="5.5" cy="18.5" r="2.5" />
+                <circle cx="18.5" cy="18.5" r="2.5" />
               </svg>
             </div>
             <div class="stat-info">
-              <span class="stat-value">—</span>
-              <span class="stat-label">Ocorrências Hoje</span>
+              <span class="stat-value">{{ apStore.meusTurnos === null ? '—' : apStore.meusTurnos }}</span>
+              <span class="stat-label">Meus Turnos no Mês</span>
             </div>
           </div>
         </div>
@@ -113,6 +110,32 @@
               O sistema está em fase inicial. Os módulos de Efetivo, Ocorrências, Viaturas e Relatórios
               serão disponibilizados em breve. Utilize o menu lateral para navegar quando os módulos forem liberados.
             </p>
+          </div>
+        </div>
+
+        <!-- Rankings do Mês -->
+        <div class="ranks-section">
+          <div class="ranks-heading-row">
+            <h3 class="ranks-heading">Rankings do Mês</h3>
+            <RouterLink to="/apreensoes" class="btn-ver-todos">
+              Ver rankings completos
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
+              </svg>
+            </RouterLink>
+          </div>
+          <div class="ranks-grid">
+            <RankMiniCard
+              title="Mais Apreensões"
+              :items="apStore.rankGeral"
+              :loading="apStore.loading"
+            />
+            <RankMiniCard
+              title="Horas Patrulhadas"
+              :items="apStore.rankPatrulha"
+              :loading="apStore.loading"
+              :formatter="formatMinutos"
+            />
           </div>
         </div>
 
@@ -201,17 +224,20 @@ import { useAuthStore } from '@/stores/auth'
 import { useEfetivoStore } from '@/stores/efetivo'
 import { usePublicacoesStore } from '@/stores/publicacoes'
 import { useViaturasStore } from '@/stores/viaturas'
+import { useApreensaoStore } from '@/stores/apreensoes'
 import { useClock } from '@/composables/useClock'
 import AppSidebar from '@/components/layout/AppSidebar.vue'
 import AppTopbar from '@/components/layout/AppTopbar.vue'
 import AvisosTab from '@/components/dashboard/AvisosTab.vue'
 import BoletinsTab from '@/components/dashboard/BoletinsTab.vue'
 import ViaturaDropdown from '@/components/viaturas/ViaturaDropdown.vue'
+import RankMiniCard from '@/components/dashboard/RankMiniCard.vue'
 
 const auth = useAuthStore()
 const efetivo = useEfetivoStore()
 const pub = usePublicacoesStore()
 const viaturas = useViaturasStore()
+const apStore = useApreensaoStore()
 const route = useRoute()
 const router = useRouter()
 const { currentTime, currentDate } = useClock()
@@ -231,6 +257,25 @@ const roleLabel = computed(() => {
   return map[auth.user?.role] || ''
 })
 
+const horasPatrulhaUsuario = computed(() => {
+  if (apStore.loading) return null
+  const uid = auth.user?.id
+  if (!uid) return '0h'
+  const entry = apStore.rankPatrulha.find((r) => r.userId?.toString() === uid.toString())
+  return entry ? formatMinutos(entry.total) : '0h'
+})
+
+const efeivoEmServico = computed(() => {
+  if (viaturas.loading) return null
+  const ids = new Set()
+  for (const v of viaturas.ativas) {
+    for (const field of ['motorista', 'chefeDeBarca', 'auxiliar1', 'auxiliar2', 'auxiliar3']) {
+      if (v[field]) ids.add((v[field]._id ?? v[field]).toString())
+    }
+  }
+  return ids.size
+})
+
 const greeting = computed(() => {
   const h = new Date().getHours()
   if (h < 12) return 'Bom dia!'
@@ -238,9 +283,23 @@ const greeting = computed(() => {
   return 'Boa noite!'
 })
 
+function formatMinutos(mins) {
+  const total = Math.round(mins)
+  const h = Math.floor(total / 60)
+  const m = total % 60
+  if (h > 0 && m > 0) return `${h}h ${m}min`
+  if (h > 0) return `${h}h`
+  return `${m}min`
+}
+
 onMounted(async () => {
   await pub.fetchAll()
   viaturas.fetchAtivas()
+  const now = new Date()
+  const mes = now.getMonth() + 1
+  const ano = now.getFullYear()
+  apStore.fetchStats(mes, ano)
+  apStore.fetchMeusTurnos(mes, ano)
   if (quadroTab.value === 'avisos') pub.markAvisosRead()
   else pub.markBoletinsRead()
 })
@@ -308,8 +367,17 @@ function logout() {
   line-height: var(--lh-relaxed);
 }
 
+.welcome-badge img {
+  width: 120px;
+  height: 120px;
+  object-fit: contain;
+}
+
 .welcome-badge {
   flex-shrink: 0;
+  z-index: 2;
+  width: 120px;
+  height: 120px;
 }
 
 /* Stats grid */
@@ -417,6 +485,52 @@ function logout() {
   font-size: var(--fs-md);
   color: var(--text-soft);
   line-height: var(--lh-relaxed);
+}
+
+/* Rankings */
+.ranks-section { margin-top: 1.75rem; }
+
+.ranks-heading-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.ranks-heading {
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-bold);
+  color: var(--text-strong);
+  font-family: var(--font-family-display);
+}
+
+.btn-ver-todos {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--primary);
+  text-decoration: none;
+  padding: 0.3rem 0.8rem;
+  border: 1px solid var(--primary-light);
+  border-radius: 6px;
+  transition: background 0.15s;
+}
+
+.btn-ver-todos svg { width: 13px; height: 13px; }
+.btn-ver-todos:hover { background: var(--surface-brand-soft); }
+
+.ranks-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+@media (max-width: 600px) {
+  .ranks-grid { grid-template-columns: 1fr; }
 }
 
 /* Viaturas */
