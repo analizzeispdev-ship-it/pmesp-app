@@ -174,6 +174,7 @@ const ITENS_APREENSAO = BASE_ITEMS.map((item) => {
   .totais-item:nth-child(even) { border-right: none; }
   .totais-item:nth-child(4) { border-right: 1px solid var(--border-soft); }
   .totais-item:last-child { border-right: none; border-bottom: none; }
+  .totais-item:last-child:nth-child(odd) { grid-column: span 2; border-right: none; }
   .totais-skeleton { grid-template-columns: repeat(2, 1fr); }
 }
 </style>

@@ -35,6 +35,12 @@ server/
 │   │   ├── index.get.ts     → GET /api/apreensoes — stats do mês (totais + rankGeral + rankPorItem)
 │   │   ├── index.post.ts    → POST /api/apreensoes — registrar apreensão (usuario deve estar na viatura)
 │   │   └── relatorio.get.ts → GET /api/apreensoes/relatorio — last 15 viaturas com apreensoes (p3/admin)
+│   ├── frota/
+│   │   ├── index.get.ts          → GET /api/frota — lista veículos ativos (any auth)
+│   │   ├── index.post.ts         → POST /api/frota — cadastrar veículo (p3/admin)
+│   │   ├── [id].put.ts           → PUT /api/frota/:id — atualizar veículo (p3/admin)
+│   │   ├── [id].delete.ts        → DELETE /api/frota/:id — soft delete (p3/admin)
+│   │   └── prefixos-disponiveis.get.ts → GET /api/frota/prefixos-disponiveis — prefixos não em uso (any auth)
 │   └── gestao/
 │       └── efetivo/
 │           ├── index.get.ts
@@ -50,7 +56,8 @@ server/
 │   ├── User.ts
 │   ├── Publicacao.ts
 │   ├── Viatura.ts
-│   └── Apreensao.ts         → viaturaId, viaturaPrefixo, membros[], 7 campos numéricos de itens, origem, registradoPorId
+│   ├── Apreensao.ts         → viaturaId, viaturaPrefixo, membros[], 7 campos numéricos de itens, origem, registradoPorId
+│   └── VeiculoFrota.ts      → modelo, ano, foto (base64), prefixos[], ativo
 ├── middleware/
 │   ├── 01.cors.ts
 │   └── 02.rateLimit.ts
@@ -308,6 +315,39 @@ Body: `{ username, name, rg?, role?, cargo?, graduacao?, dataPromocao?, badge? }
 Gera senha temporária aleatória: `Pmesp@XXXXXX`.
 Retorna: `{ user: {...}, tempPassword }` — único momento em que a senha temporária é exposta.
 Erro 409 se username já existe.
+
+### `server/models/VeiculoFrota.ts`
+Schema Mongoose:
+```
+modelo   String   required, trim
+ano      Number   required
+foto     String   default: '' (base64 data URL — max 2MB recommended)
+prefixos [String] default: []
+ativo    Boolean  default: true
+timestamps: true
+```
+Index: `{ ativo: 1 }`.
+
+### `server/api/frota/index.get.ts`
+`GET /api/frota` — qualquer role autenticado
+Retorna: `{ veiculos: [...] }` — apenas `ativo: true`, ordenados por `modelo`.
+
+### `server/api/frota/index.post.ts`
+`POST /api/frota` — requer cargo p3 ou admin
+Body: `{ modelo, ano, foto?, prefixos? }`
+Valida: modelo obrigatório, ano >= 1900. Retorna `{ veiculo }`.
+
+### `server/api/frota/[id].put.ts`
+`PUT /api/frota/:id` — requer cargo p3 ou admin
+Body: `{ modelo, ano, foto?, prefixos? }`. Retorna `{ veiculo }` atualizado.
+
+### `server/api/frota/[id].delete.ts`
+`DELETE /api/frota/:id` — requer cargo p3 ou admin
+Soft delete: seta `ativo: false`. Retorna `{ success: true }`.
+
+### `server/api/frota/prefixos-disponiveis.get.ts`
+`GET /api/frota/prefixos-disponiveis` — qualquer role autenticado
+Retorna: `{ prefixos: [{ prefixo, modelo, ano, veiculoId }] }` — prefixos de veículos ativos que não estão em uso em nenhuma viatura ativa. Ordenados alfabeticamente por prefixo.
 
 ---
 

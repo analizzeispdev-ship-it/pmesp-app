@@ -14,8 +14,8 @@
 
     <div class="main">
       <AppTopbar
-        title="Registro de Turno"
-        breadcrumb="Operacional / Registro de Turno"
+        title="Frota de Viaturas"
+        breadcrumb="Gestão Operacional / Frota"
         :current-date="currentDate"
         :current-time="currentTime"
         :initials="initials"
@@ -27,44 +27,42 @@
         <div class="page-card">
           <div class="card-header">
             <div class="header-text">
-              <h3 class="card-title">Viaturas em Patrulha</h3>
-              <span v-if="!store.loading" class="card-subtitle">
-                {{ store.ativas.length }} viatura{{ store.ativas.length !== 1 ? 's' : '' }} ativa{{ store.ativas.length !== 1 ? 's' : '' }}
+              <h3 class="card-title">Frota de Viaturas</h3>
+              <span v-if="!frota.loading" class="card-subtitle">
+                {{ frota.veiculos.length }} veículo{{ frota.veiculos.length !== 1 ? 's' : '' }} cadastrado{{ frota.veiculos.length !== 1 ? 's' : '' }}
               </span>
             </div>
-            <button class="btn-open" @click="modalAbrir = true">
+            <button class="btn-open" @click="abrirCadastrar">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                 <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
               </svg>
-              Abrir Viatura
+              Cadastrar Veículo
             </button>
           </div>
 
-          <div v-if="store.loading" class="list-feedback">
+          <div v-if="frota.loading" class="list-feedback">
             <div class="spinner" />
-            <span>Carregando viaturas...</span>
+            <span>Carregando frota...</span>
           </div>
 
-          <div v-else-if="store.ativas.length === 0" class="list-empty">
+          <div v-else-if="frota.veiculos.length === 0" class="list-empty">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
               <rect x="1" y="3" width="15" height="13" rx="2" />
               <path d="M16 8h4l3 3v5h-7V8z" />
               <circle cx="5.5" cy="18.5" r="2.5" />
               <circle cx="18.5" cy="18.5" r="2.5" />
             </svg>
-            <span>Nenhuma viatura em patrulha.</span>
+            <span>Nenhum veículo cadastrado.</span>
           </div>
 
-          <div v-else class="viaturas-list">
-            <ViaturaDropdown
-              v-for="v in store.ativas"
+          <div v-else class="veiculos-list">
+            <VeiculoCard
+              v-for="v in frota.veiculos"
               :key="v._id"
-              :viatura="v"
-              show-encerrar
-              :show-edit="canEditViatura(v)"
-              :action-loading="store.actionLoading"
-              @encerrar="openEncerrar"
-              @edit-crew="openEditar"
+              :veiculo="v"
+              :action-loading="frota.actionLoading"
+              @editar="abrirEditar"
+              @remover="onRemover"
             />
           </div>
         </div>
@@ -72,32 +70,13 @@
     </div>
   </div>
 
-  <AbrirViaturaModal
+  <CadastrarVeiculoModal
     :open="modalAbrir"
-    :loading="store.actionLoading"
-    :officers="gestaoEfetivo.ativos"
-    :prefixos="frota.prefixosDisponiveis"
-    :error="store.actionError || ''"
-    @close="modalAbrir = false"
-    @confirm="onAbrir"
-  />
-
-  <EncerrarViaturaModal
-    :open="!!selectedViatura"
-    :viatura="selectedViatura"
-    :loading="store.actionLoading"
-    @close="selectedViatura = null"
-    @confirm="onEncerrar"
-  />
-
-  <EditarTripulacaoModal
-    :open="!!selectedViaturaEditar"
-    :viatura="selectedViaturaEditar"
-    :loading="store.actionLoading"
-    :officers="gestaoEfetivo.ativos"
-    :error="store.actionError || ''"
-    @close="selectedViaturaEditar = null"
-    @confirm="onEditarTripulacao"
+    :veiculo="veiculoEditando"
+    :loading="frota.actionLoading"
+    :error="frota.actionError || ''"
+    @close="fecharModal"
+    @confirm="onConfirm"
   />
 </template>
 
@@ -105,21 +84,15 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import { useViaturasStore } from '@/stores/viaturas'
-import { useGestaoEfetivoStore } from '@/stores/gestaoEfetivo'
 import { useFrotaStore } from '@/stores/frota'
 import { useToastStore } from '@/stores/toast'
 import { useClock } from '@/composables/useClock'
 import AppSidebar from '@/components/layout/AppSidebar.vue'
 import AppTopbar from '@/components/layout/AppTopbar.vue'
-import ViaturaDropdown from '@/components/viaturas/ViaturaDropdown.vue'
-import AbrirViaturaModal from '@/components/viaturas/AbrirViaturaModal.vue'
-import EncerrarViaturaModal from '@/components/viaturas/EncerrarViaturaModal.vue'
-import EditarTripulacaoModal from '@/components/viaturas/EditarTripulacaoModal.vue'
+import VeiculoCard from '@/components/frota/VeiculoCard.vue'
+import CadastrarVeiculoModal from '@/components/frota/CadastrarVeiculoModal.vue'
 
 const auth = useAuthStore()
-const store = useViaturasStore()
-const gestaoEfetivo = useGestaoEfetivoStore()
 const frota = useFrotaStore()
 const toast = useToastStore()
 const route = useRoute()
@@ -127,18 +100,10 @@ const router = useRouter()
 const { currentTime, currentDate } = useClock()
 
 const modalAbrir = ref(false)
-const selectedViatura = ref(null)
-const selectedViaturaEditar = ref(null)
+const veiculoEditando = ref(null)
 
-watch(() => store.actionError, (err) => {
+watch(() => frota.actionError, (err) => {
   if (err) toast.show(err, 'error')
-})
-
-watch(modalAbrir, (val) => {
-  if (val) {
-    gestaoEfetivo.fetchAtivos()
-    frota.fetchPrefixosDisponiveis()
-  }
 })
 
 const initials = computed(() => {
@@ -152,53 +117,43 @@ const roleLabel = computed(() => {
 })
 
 onMounted(() => {
-  store.fetchAtivas()
-  if (gestaoEfetivo.ativos.length === 0) gestaoEfetivo.fetchAtivos()
+  frota.fetchVeiculos()
 })
 
-function userInCrew(v) {
-  const uid = auth.user?.id
-  return ['motorista', 'chefeDeBarca', 'auxiliar1', 'auxiliar2', 'auxiliar3']
-    .some((k) => v[k] && (v[k]._id ?? v[k]).toString() === uid)
+function abrirCadastrar() {
+  veiculoEditando.value = null
+  modalAbrir.value = true
 }
 
-function canEditViatura(v) {
-  return auth.isAdmin || userInCrew(v)
+function abrirEditar(veiculo) {
+  veiculoEditando.value = veiculo
+  modalAbrir.value = true
 }
 
-function openEncerrar(viaturaId) {
-  selectedViatura.value = store.ativas.find((v) => v._id === viaturaId) ?? null
+function fecharModal() {
+  modalAbrir.value = false
+  veiculoEditando.value = null
 }
 
-function openEditar(viatura) {
-  selectedViaturaEditar.value = viatura
-}
-
-async function onAbrir(payload) {
+async function onConfirm(payload) {
   try {
-    const v = await store.abrirViatura(payload)
-    modalAbrir.value = false
-    toast.show(`Viatura ${v.prefixo} aberta com sucesso.`)
+    if (veiculoEditando.value) {
+      await frota.atualizar(veiculoEditando.value._id, payload)
+      fecharModal()
+      toast.show(`Veículo ${payload.modelo} atualizado.`)
+    } else {
+      await frota.criar(payload)
+      fecharModal()
+      toast.show(`Veículo ${payload.modelo} cadastrado.`)
+    }
   } catch {}
 }
 
-async function onEncerrar() {
-  const prefixo = selectedViatura.value?.prefixo
-  const id = selectedViatura.value?._id
+async function onRemover(id) {
+  const v = frota.veiculos.find((v) => v._id === id)
   try {
-    await store.encerrarViatura(id)
-    selectedViatura.value = null
-    toast.show(`Viatura ${prefixo} encerrada.`)
-  } catch {}
-}
-
-async function onEditarTripulacao(crew) {
-  const id = selectedViaturaEditar.value?._id
-  const prefixo = selectedViaturaEditar.value?.prefixo
-  try {
-    await store.editarTripulacao(id, crew)
-    selectedViaturaEditar.value = null
-    toast.show(`Tripulação da ${prefixo} atualizada.`)
+    await frota.remover(id)
+    toast.show(`Veículo ${v?.modelo ?? ''} removido.`)
   } catch {}
 }
 
@@ -229,7 +184,6 @@ function logout() {
   flex-direction: column;
   gap: 1rem;
 }
-
 
 .page-card {
   background: var(--surface);
@@ -320,9 +274,8 @@ function logout() {
   color: var(--border);
 }
 
-.viaturas-list {
+.veiculos-list {
   display: flex;
   flex-direction: column;
 }
-
 </style>

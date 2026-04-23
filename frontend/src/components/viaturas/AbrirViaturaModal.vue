@@ -1,14 +1,24 @@
 <template>
   <BaseModal :open="open" title="Abrir Viatura" max-width="560px" @close="$emit('close')">
+    <div v-if="prefixos.length === 0" class="no-prefixos">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <rect x="1" y="3" width="15" height="13" rx="2" />
+        <path d="M16 8h4l3 3v5h-7V8z" />
+        <circle cx="5.5" cy="18.5" r="2.5" />
+        <circle cx="18.5" cy="18.5" r="2.5" />
+      </svg>
+      <span>Nenhum prefixo disponível. Cadastre veículos na Frota de Viaturas.</span>
+    </div>
+
     <div class="fields-row">
       <div class="field">
         <label class="field-label">Prefixo <span class="req">*</span></label>
-        <input
-          v-model="form.prefixo"
-          class="field-input"
-          placeholder="ex: M-18012 / Tático 12"
-          maxlength="20"
-        />
+        <select v-model="form.prefixo" class="field-select" :disabled="prefixos.length === 0">
+          <option value="">— Selecionar —</option>
+          <option v-for="p in prefixos" :key="p.prefixo" :value="p.prefixo">
+            {{ p.prefixo }} — {{ p.modelo }} {{ p.ano }}
+          </option>
+        </select>
       </div>
       <div class="field field--grow">
         <label class="field-label">Observação</label>
@@ -71,6 +81,7 @@ const props = defineProps({
   open: { type: Boolean, default: false },
   loading: { type: Boolean, default: false },
   officers: { type: Array, default: () => [] },
+  prefixos: { type: Array, default: () => [] },
   error: { type: String, default: '' },
 })
 
@@ -140,6 +151,20 @@ function handleConfirm() {
 </script>
 
 <style scoped>
+.no-prefixos {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: var(--surface-subtle);
+  border: 1px solid var(--border-soft);
+  border-radius: 8px;
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+}
+
+.no-prefixos svg { width: 20px; height: 20px; flex-shrink: 0; color: var(--text-faint); }
+
 .fields-row {
   display: flex;
   gap: 0.75rem;

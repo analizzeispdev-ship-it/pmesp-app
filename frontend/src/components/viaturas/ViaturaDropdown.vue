@@ -63,7 +63,6 @@
           <div class="crew-officer">
             <span class="crew-prefix">{{ getPrefix(viatura[key].graduacao) }}</span>
             <span class="crew-name">{{ viatura[key].name }}</span>
-            <span class="crew-rg">· {{ viatura[key].rg }}</span>
           </div>
         </div>
       </div>
@@ -249,7 +248,7 @@ function getPrefix(v) {
 .vdrop-body {
   background: var(--surface-soft);
   border-top: 1px solid var(--border-soft);
-  padding: 0.75rem 1.25rem 0.75rem 2.75rem;
+  padding: 0.75rem 1.25rem 0.75rem 1.25rem;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;

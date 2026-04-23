@@ -56,6 +56,12 @@ const routes = [
     component: () => import('@/views/ApreensaoView.vue'),
     meta: { requiresAuth: true },
   },
+  {
+    path: '/gestao/frota',
+    name: 'FrotaViaturas',
+    component: () => import('@/views/FrotaView.vue'),
+    meta: { requiresAuth: true, requiresCargo: 'p3' },
+  },
 ]
 
 const router = createRouter({

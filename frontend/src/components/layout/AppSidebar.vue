@@ -113,6 +113,25 @@
         <span class="badge-soon">Em breve</span>
       </a>
 
+      <template v-if="isP3">
+        <div class="nav-section">Gestão Operacional</div>
+
+        <RouterLink
+          to="/gestao/frota"
+          class="nav-item"
+          :class="{ active: currentPath === '/gestao/frota' }"
+          @click="isOpen = false"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="1" y="3" width="15" height="13" rx="2" />
+            <path d="M16 8h4l3 3v5h-7V8z" />
+            <circle cx="5.5" cy="18.5" r="2.5" />
+            <circle cx="18.5" cy="18.5" r="2.5" />
+          </svg>
+          <span>Frota de Viaturas</span>
+        </RouterLink>
+      </template>
+
       <template v-if="isRh || canEmitir">
         <div class="nav-section">Gestão de Pessoal</div>
 
@@ -217,6 +236,10 @@ defineProps({
     default: false,
   },
   canEmitir: {
+    type: Boolean,
+    default: false,
+  },
+  isP3: {
     type: Boolean,
     default: false,
   },

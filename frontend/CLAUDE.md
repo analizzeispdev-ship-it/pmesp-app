@@ -45,7 +45,7 @@ src/
 │   │   └── ExonerarModal.vue      → modal overlay de confirmação destrutiva; emite `confirm`
 │   ├── viaturas/
 │   │   ├── ViaturaDropdown.vue     → item colapsável; props: viatura, showEncerrar, showEdit, actionLoading; emits: encerrar(id), edit-crew(viatura)
-│   │   ├── AbrirViaturaModal.vue   → modal form: prefixo, observação, 5 selects de cargo; emite confirm(payload)
+│   │   ├── AbrirViaturaModal.vue   → modal form: prefixo (select com prefixos da frota; aviso se nenhum disponível), observação, 5 selects de cargo; prop prefixos (Array — prefixos disponíveis da frota); emite confirm(payload)
 │   │   ├── EncerrarViaturaModal.vue → modal confirmação destrutiva; mostra crew; emite confirm
 │   │   └── EditarTripulacaoModal.vue → modal pré-populado com crew atual; selects filtrados; marca "EM OUTRA BARCA"; emite confirm(crew)
 │   ├── apreensoes/
@@ -53,6 +53,9 @@ src/
 │   │   ├── RankList.vue            → lista de rank reutilizável; props: items[], loading, formatter(Function); medalhas gold/silver/bronze nos top 3; formatter converte total (ex: minutos → "Xh Ymin")
 │   │   ├── AdicionarApreensaoModal.vue → modal form: viatura (apenas a do user), origem, grid de 7 inputs numéricos; valida ≥1 item; emite confirm(payload)
 │   │   └── RelatorioViaturasModal.vue  → modal lista last 15 viaturas com dropdown de apreensoes; apenas P3/admin abre
+│   ├── frota/
+│   │   ├── VeiculoCard.vue             → card horizontal por veículo; foto/placeholder, modelo, ano, prefixos badges; editar/remover com confirm inline de 2 etapas
+│   │   └── CadastrarVeiculoModal.vue   → modal create/edit: upload foto (base64, max 2MB), modelo, ano, lista dinâmica de prefixos com add/remove
 │   ├── efetivo/
 │   │   ├── EfetivoTable.vue        → tabela de policiais com avatar, cargo, graduação, PAD, cursos, patrulha
 │   │   ├── PadIndicator.vue        → 3 quadradinhos coloridos (0=vazio, 1=dourado, 2=âmbar, 3=vermelho)
@@ -79,7 +82,8 @@ src/
     ├── EmitirBoletimView.vue
     ├── GestaoEfetivoView.vue
     ├── ViaturaView.vue
-    └── ApreensaoView.vue
+    ├── ApreensaoView.vue
+    └── FrotaView.vue
 ```
 
 ---
@@ -189,6 +193,7 @@ Histórico: `createWebHistory()`.
 | `/gestao/efetivo` | `GestaoEfetivo` | `GestaoEfetivoView` | `requiresAuth: true, requiresCargo: 'p1'` |
 | `/viaturas` | `Viaturas` | `ViaturaView` | `requiresAuth: true, requiresCargo: 'p1'` |
 | `/apreensoes` | `Apreensoes` | `ApreensaoView` | `requiresAuth: true` |
+| `/gestao/frota` | `FrotaViaturas` | `FrotaView` | `requiresAuth: true, requiresCargo: 'p3'` |
 
 **Guard `beforeEach`:**
 1. Rota pública → passa
@@ -233,8 +238,9 @@ Layout: sidebar fixa + área principal (topbar + conteúdo), com linguagem visua
 
 ### `src/components/layout/AppSidebar.vue`
 Sidebar institucional fixa do dashboard.
-- Recebe `currentPath`, `isAdmin`, `isRh`, `initials`, `userName`, `userRank`.
+- Recebe `currentPath`, `isAdmin`, `isRh`, `isP3` (Boolean, default false), `initials`, `userName`, `userRank`.
 - Seção "Gestão de Pessoal" visível apenas quando `isRh = true` (cargo p1 ou admin).
+- Seção "Gestão Operacional" visível quando `isP3 = true` (cargo p3 ou admin). Contém link para Frota de Viaturas.
 - Emite `logout`.
 - Exibe branding PMESP, grupos de navegação, itens desabilitados "Em breve" e rodapé do usuário.
 - Cores e tipografia aplicadas por variáveis CSS globais (tokens), sem valores fixos de tema.
@@ -263,6 +269,16 @@ Store Pinia `viaturas`. Gerencia viaturas em patrulha.
 Store Pinia `gestao`. Gerencia criação de usuários via `POST /api/users`.
 **State:** `loading`, `error`, `lastCreated: { user, tempPassword } | null`
 **Action:** `criarUsuario(data)` → chama API e popula `lastCreated`; `resetLastCreated()` limpa para novo cadastro.
+
+### `src/stores/frota.js`
+Store Pinia `frota`. Gerencia frota de veículos e prefixos disponíveis.
+**State:** `veiculos[]`, `prefixosDisponiveis[]`, `loading`, `error`, `actionLoading`, `actionError`
+**Actions:**
+- `fetchVeiculos()` → `GET /api/frota` → popula `veiculos`
+- `fetchPrefixosDisponiveis()` → `GET /api/frota/prefixos-disponiveis` → popula `prefixosDisponiveis` (silencioso em erro)
+- `criar(payload)` → `POST /api/frota` → insere em `veiculos` ordenado por modelo
+- `atualizar(id, payload)` → `PUT /api/frota/:id` → atualiza `veiculos[idx]`
+- `remover(id)` → `DELETE /api/frota/:id` → remove de `veiculos`
 
 ### `src/stores/publicacoes.js`
 Store Pinia `publicacoes`. Gerencia avisos e boletins internos.
@@ -297,12 +313,21 @@ Layout: AppSidebar + AppTopbar. Conteúdo:
 - `userViatura` computed: viatura ativa onde o user está na tripulação (via viaturas.ativas)
 - Usa `useApreensaoStore` + `useViaturasStore`
 
+### `src/views/FrotaView.vue`
+Rota `/gestao/frota` — acesso exclusivo p3 + admin.
+Layout: AppSidebar + AppTopbar. Page card com botão "Cadastrar Veículo".
+Lista `VeiculoCard` com callbacks `@editar → CadastrarVeiculoModal` e `@remover → frota.remover`.
+Usa `useFrotaStore`.
+`onMounted`: chama `frota.fetchVeiculos()`.
+
 ### `src/views/ViaturaView.vue`
 Rota `/viaturas` — acesso P1 + admin. Gerencia viaturas abertas.
 Layout: AppSidebar + AppTopbar. Page card com botão "Abrir Viatura" no header.
 Lista `ViaturaDropdown` com `showEncerrar=true` e `@encerrar → EncerrarViaturaModal`.
-Usa `useViaturasStore` + `useGestaoEfetivoStore` (para officers do AbrirViaturaModal).
+Usa `useViaturasStore` + `useGestaoEfetivoStore` (para officers do AbrirViaturaModal) + `useFrotaStore`.
 `onMounted`: chama `store.fetchAtivas()` e `gestaoEfetivo.fetchAtivos()` se vazio.
+Watch no `modalAbrir` também chama `frota.fetchPrefixosDisponiveis()` ao abrir o modal.
+Passa `:prefixos="frota.prefixosDisponiveis"` ao `AbrirViaturaModal`.
 
 ### `src/views/GestaoUsuariosView.vue`
 Acessível apenas para `cargo: 'p1'` (RH) e `admin`. Rota `/gestao/usuarios` com `requiresCargo: 'p1'` no router guard.

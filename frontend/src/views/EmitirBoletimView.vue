@@ -4,6 +4,7 @@
       :current-path="route.path"
       :is-admin="auth.isAdmin"
       :is-rh="auth.isRh"
+      :is-p3="auth.isP3"
       :can-emitir="auth.canEmitir"
       :initials="initials"
       :user-name="auth.user?.name || ''"
