@@ -74,6 +74,12 @@ const routes = [
     component: () => import('@/views/AusenciasView.vue'),
     meta: { requiresAuth: true },
   },
+  {
+    path: '/registro-atividade',
+    name: 'RegistroAtividade',
+    component: () => import('@/views/AtividadeView.vue'),
+    meta: { requiresAuth: true, requiresCargo: 'p1' },
+  },
 ]
 
 const router = createRouter({

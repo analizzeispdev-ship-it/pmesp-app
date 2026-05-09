@@ -195,6 +195,19 @@
         </RouterLink>
 
         <RouterLink
+          v-if="isRh"
+          to="/registro-atividade"
+          class="nav-item"
+          :class="{ active: currentPath === '/registro-atividade' }"
+          @click="isOpen = false"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+          </svg>
+          <span>Registro de Atividade</span>
+        </RouterLink>
+
+        <RouterLink
           v-if="canEmitir"
           to="/emitir-boletim"
           class="nav-item"

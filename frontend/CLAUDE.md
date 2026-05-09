@@ -204,6 +204,7 @@ Histórico: `createWebHistory()`.
 | `/gestao/frota` | `FrotaViaturas` | `FrotaView` | `requiresAuth: true, requiresCargo: 'p3'` |
 | `/fardamentos` | `Fardamentos` | `FardamentosView` | `requiresAuth: true` |
 | `/ausencias` | `Ausencias` | `AusenciasView` | `requiresAuth: true` |
+| `/registro-atividade` | `RegistroAtividade` | `AtividadeView` | `requiresAuth: true, requiresCargo: 'p1'` |
 
 **Guard `beforeEach`:**
 1. Rota pública → passa
@@ -301,6 +302,11 @@ Store Pinia `fardamentos`. Gerencia lista de fardamentos ordenados.
 - `remover(id)` → `DELETE /api/fardamentos/:id` → filtra de `fardamentos`
 - `mover(id, direcao)` → swap otimista de posição no array + `PATCH /api/fardamentos/:id/mover`; reverte com `fetchAll()` em caso de erro
 
+### `src/stores/atividade.js`
+Store Pinia `atividade`. Busca métricas do mês via `GET /api/atividade`.
+**State:** `efetivo[]`, `totalWeekdays`, `mes`, `loading`, `error`
+**Action:** `fetchAll()` → popula state
+
 ### `src/stores/ausencias.js`
 Store Pinia `ausencias`. Gerencia ausências do usuário (ou todo efetivo para P1/admin).
 **State:** `ausencias[]`, `loading`, `error`, `actionLoading`, `actionError`
@@ -380,6 +386,14 @@ Layout idêntico ao Dashboard (sidebar + topbar + content). Usa `useClock()` e `
 - Renderiza `EfetivoTable` com `filteredOfficers` e estado `loading`.
 - Exibe `error-bar` quando `efetivo.error` está preenchido.
 - Carrega dados via `efetivo.fetchAll()` no `onMounted`.
+
+### `src/views/AtividadeView.vue`
+Rota `/registro-atividade` — acesso P1 + admin.
+Layout: AppSidebar + AppTopbar. Usa `useAtividadeStore`.
+Tabela: Policial | Graduação | Cargo | Dias Patrulhados (x/total) | Cumprimento (barra de progresso + %) | Status (badge)
+Badge de status: `apto` (verde, ≥60%), `ativo` (azul, 40-59%), `inativo` (vermelho, <40%).
+Legenda acima da tabela explicando as faixas. Botão "Atualizar" refaz `store.fetchAll()`.
+Exibe mês de referência e total de dias úteis no subtítulo.
 
 ### `src/views/AusenciasView.vue`
 Rota `/ausencias` — acesso para todos autenticados.

@@ -339,6 +339,16 @@ timestamps: true
 ```
 Indexes: `{ usuarioId: 1, status: 1 }`, `{ status: 1, data: -1 }`.
 
+### `server/api/atividade/index.get.ts`
+`GET /api/atividade` — requer cargo p1 ou admin
+Retorna efetivo ativo sem ausência ativa, com métricas do mês corrente:
+- `diasPatrulhados`: dias úteis (seg-sex) únicos em que o policial estava em viatura ativa
+- `totalWeekdays`: total de dias úteis do mês até hoje
+- `percentual`: % arredondado
+- `flag`: `'apto'` (≥60%), `'ativo'` (40–59%), `'inativo'` (<40%)
+Exclui admins. Ordenado por flag (apto→ativo→inativo) e nome.
+Retorna: `{ efetivo: [...], totalWeekdays, mes }`.
+
 ### `server/api/ausencias/index.get.ts`
 `GET /api/ausencias` — qualquer role autenticado
 Query params: `?usuarioId=xxx&data=yyyy-mm-dd` (apenas para P1/admin)
