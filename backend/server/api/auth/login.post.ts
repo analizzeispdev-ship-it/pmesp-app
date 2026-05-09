@@ -42,6 +42,7 @@ export default defineEventHandler(async (event) => {
       patrulhando: user.patrulhando,
       badge: user.badge,
       firstAccess: user.firstAccess,
+      ausente: user.ausente,
     },
   }
 })

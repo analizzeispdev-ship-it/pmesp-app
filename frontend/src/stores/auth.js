@@ -67,6 +67,13 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
+    setAusente(value) {
+      if (this.user) {
+        this.user = { ...this.user, ausente: value }
+        localStorage.setItem(USER_KEY, JSON.stringify(this.user))
+      }
+    },
+
     logout() {
       this.token = null
       this.user = null

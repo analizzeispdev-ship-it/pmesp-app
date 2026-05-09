@@ -28,7 +28,10 @@
       <tr v-for="officer in officers" :key="officer._id">
         <td class="td-policial">
           <div class="officer-info">
-            <span class="officer-display">{{ buildDisplayName(officer.name, officer.rg, officer.graduacao) }}</span>
+            <div class="officer-name-row">
+              <span class="officer-display">{{ buildDisplayName(officer.name, officer.rg, officer.graduacao) }}</span>
+              <span v-if="officer.ausente" class="badge-ausente">Ausente</span>
+            </div>
             <span class="officer-username">@{{ officer.username }}</span>
           </div>
         </td>
@@ -93,6 +96,20 @@ function formatDate(dateStr) {
 .td-policial { min-width: 200px; }
 
 .officer-info { display: flex; flex-direction: column; gap: 1px; }
+
+.officer-name-row { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
+
+.badge-ausente {
+  font-size: var(--fs-2xs);
+  font-weight: var(--fw-semibold);
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  background: #fffbeb;
+  color: #d97706;
+  border: 1px solid #fcd34d;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
 
 .officer-display {
   font-size: var(--fs-sm);

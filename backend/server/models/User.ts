@@ -24,6 +24,7 @@ export interface IUser extends Document {
   badge: string
   firstAccess: boolean
   active: boolean
+  ausente: boolean
   comparePassword(password: string): Promise<boolean>
 }
 
@@ -60,6 +61,7 @@ const UserSchema = new Schema<IUser>(
     badge: { type: String, default: '' },
     firstAccess: { type: Boolean, default: true },
     active: { type: Boolean, default: true },
+    ausente: { type: Boolean, default: false },
   },
   { timestamps: true }
 )

@@ -56,6 +56,9 @@ src/
 │   ├── frota/
 │   │   ├── VeiculoCard.vue             → card horizontal por veículo; foto/placeholder, modelo, ano, prefixos badges; editar/remover com confirm inline de 2 etapas
 │   │   └── CadastrarVeiculoModal.vue   → modal create/edit: upload foto (base64, max 2MB), modelo, ano, lista dinâmica de prefixos com add/remove
+│   ├── ausencias/
+│   │   ├── SolicitarAusenciaModal.vue  → modal create: datepicker (input type=date, min=hoje, PT-BR) + textarea motivo; emite confirm({data, motivo})
+│   │   └── AusenciaAvisoModal.vue      → modal informativo quando user.ausente=true; emite continuar / ir-ausencias
 │   ├── fardamentos/
 │   │   ├── FardamentoCard.vue          → card vertical; imagem (210px height) com overlay de ações (cima/baixo/editar/excluir com confirm) no topo direito; info (nome, descricao) e 2-col grid dos 11 campos de inventário (esq: maos/jaqueta/mochila/acessorios/sapatos/chapeu; dir: camisa/coletes/adesivos/calcas/mascara); ações visíveis apenas se isP3
 │   │   └── CadastrarFardamentoModal.vue → modal create/edit: foto upload (portrait 80x100, max 2MB), nome (required), descricao textarea, 2-col grid de 11 campos de inventário (texto livre tipo "321/4")
@@ -87,7 +90,8 @@ src/
     ├── ViaturaView.vue
     ├── ApreensaoView.vue
     ├── FrotaView.vue
-    └── FardamentosView.vue
+    ├── FardamentosView.vue
+    └── AusenciasView.vue
 ```
 
 ---
@@ -199,6 +203,7 @@ Histórico: `createWebHistory()`.
 | `/apreensoes` | `Apreensoes` | `ApreensaoView` | `requiresAuth: true` |
 | `/gestao/frota` | `FrotaViaturas` | `FrotaView` | `requiresAuth: true, requiresCargo: 'p3'` |
 | `/fardamentos` | `Fardamentos` | `FardamentosView` | `requiresAuth: true` |
+| `/ausencias` | `Ausencias` | `AusenciasView` | `requiresAuth: true` |
 
 **Guard `beforeEach`:**
 1. Rota pública → passa
@@ -296,6 +301,15 @@ Store Pinia `fardamentos`. Gerencia lista de fardamentos ordenados.
 - `remover(id)` → `DELETE /api/fardamentos/:id` → filtra de `fardamentos`
 - `mover(id, direcao)` → swap otimista de posição no array + `PATCH /api/fardamentos/:id/mover`; reverte com `fetchAll()` em caso de erro
 
+### `src/stores/ausencias.js`
+Store Pinia `ausencias`. Gerencia ausências do usuário (ou todo efetivo para P1/admin).
+**State:** `ausencias[]`, `loading`, `error`, `actionLoading`, `actionError`
+**Getters:** `ativa` → primeira ausência com `status: 'ativa'`
+**Actions:**
+- `fetchAll(params)` → `GET /api/ausencias?usuarioId&data` → popula `ausencias`
+- `solicitar(payload)` → `POST /api/ausencias` → unshift em `ausencias` + `auth.setAusente(true)`
+- `encerrar(id)` → `PATCH /api/ausencias/:id/encerrar` → atualiza status otimisticamente + `auth.setAusente(false)`
+
 ### `src/stores/publicacoes.js`
 Store Pinia `publicacoes`. Gerencia avisos e boletins internos.
 **State:** `avisos[]`, `boletins[]`, `loading`, `error`, `submitting`, `submitError`
@@ -366,6 +380,38 @@ Layout idêntico ao Dashboard (sidebar + topbar + content). Usa `useClock()` e `
 - Renderiza `EfetivoTable` com `filteredOfficers` e estado `loading`.
 - Exibe `error-bar` quando `efetivo.error` está preenchido.
 - Carrega dados via `efetivo.fetchAll()` no `onMounted`.
+
+### `src/views/AusenciasView.vue`
+Rota `/ausencias` — acesso para todos autenticados.
+Layout: AppSidebar + AppTopbar. Usa `useAusenciasStore`.
+- Alert banner amber se usuário logado tiver ausência ativa: mostra data + motivo + botão "Retirar Ausência" → chama `store.encerrar(id)`
+- Botão "Solicitar Ausência" (desabilitado se já tem ausência ativa) → abre `SolicitarAusenciaModal`
+- P1/admin: mostra ausências de todos + filtros client-side por usuário (select de únicos) e data (input date)
+- Usuário comum: mostra somente as próprias
+- Tabela: (P1: Policial) + Data | Motivo | Status (badge amber/verde) | Ação (botão "Retirar" se ativa)
+`onMounted`: chama `store.fetchAll()`.
+
+### `src/components/ausencias/SolicitarAusenciaModal.vue`
+Modal create: datepicker `input type=date` com `min=hoje` (formato nativo PT-BR), textarea motivo.
+Props: `open`, `loading`, `error`. Emits: `close`, `confirm({ data, motivo })`.
+
+### `src/components/ausencias/AusenciaAvisoModal.vue`
+Modal informativo mostrado em `App.vue` quando `auth.user.ausente=true` (uma vez por sessão via sessionStorage).
+Props: `open`. Emits: `continuar` (fecha + sessionStorage), `ir-ausencias` (fecha + sessionStorage + router.push('/ausencias')).
+
+### `src/App.vue`
+`<RouterView />` + `<AppToast />` + `<AusenciaAvisoModal />`.
+Watch em `auth.user?.ausente` (immediate): se true e `sessionStorage.pmesp_ausencia_modal_shown` não setado → abre modal.
+Quando ausente volta a false → fecha modal. Dismiss/ir-ausencias: fecha + seta sessionStorage.
+
+### `src/components/efetivo/EfetivoTable.vue`
+Badge `"Ausente"` (amber pill) exibido ao lado do `officer-display` quando `officer.ausente === true`.
+
+### `src/components/gestao/EfetivoAtivoTab.vue`
+Badge `"Ausente"` (amber pill) exibido ao lado do `officer-name` quando `officer.ausente === true`.
+
+### `src/components/layout/AppSidebar.vue`
+Link "Ausências" (ícone calendário) visível para todos autenticados, após "Fardamentos" na seção Operacional.
 
 ### `src/components/layout/AppTopbar.vue`
 Topbar de dashboard.

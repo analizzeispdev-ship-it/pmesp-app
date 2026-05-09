@@ -145,6 +145,7 @@ ultimaPatrulha Date     default: null
 badge          String   default: ''
 firstAccess    Boolean  default: true
 active         Boolean  default: true
+ausente        Boolean  default: false
 timestamps: true
 ```
 Hook `pre('save')`: faz hash bcrypt(12) apenas se `password` foi modificado.
@@ -158,7 +159,7 @@ Nitro plugin que roda no boot. Cria usuário admin se não existir:
 ### `server/api/auth/login.post.ts`
 `POST /api/auth/login` — público (rate limit cobre)
 Body: `{ username, password }`
-Retorna: `{ token, user: { id, username, name, rg, role, cargo, graduacao, dataPromocao, patrulhando, badge, firstAccess } }`
+Retorna: `{ token, user: { id, username, name, rg, role, cargo, graduacao, dataPromocao, patrulhando, badge, firstAccess, ausente } }`
 Erro 400 se campos faltando · 401 se inválido · nunca revelar qual campo está errado.
 
 ### `server/api/auth/change-password.post.ts`
@@ -322,6 +323,40 @@ Body: `{ username, name, rg?, role?, cargo?, graduacao?, dataPromocao?, badge? }
 Gera senha temporária aleatória: `Pmesp@XXXXXX`.
 Retorna: `{ user: {...}, tempPassword }` — único momento em que a senha temporária é exposta.
 Erro 409 se username já existe.
+
+### `server/models/Ausencia.ts`
+Schema Mongoose:
+```
+usuarioId      ObjectId   ref: 'User'  required
+usuarioNome    String     required (snapshot)
+usuarioRg      String     default: ''
+usuarioGraduacao String   default: ''
+data           Date       required
+motivo         String     required, trim
+status         'ativa' | 'encerrada'  default: 'ativa'
+encerradaEm    Date       default: null
+timestamps: true
+```
+Indexes: `{ usuarioId: 1, status: 1 }`, `{ status: 1, data: -1 }`.
+
+### `server/api/ausencias/index.get.ts`
+`GET /api/ausencias` — qualquer role autenticado
+Query params: `?usuarioId=xxx&data=yyyy-mm-dd` (apenas para P1/admin)
+- Usuário comum: retorna só as próprias ausências
+- P1/admin: retorna todas, com filtros opcionais por usuário e data
+Retorna: `{ ausencias: [...] }` ordenadas por `createdAt desc`.
+
+### `server/api/ausencias/index.post.ts`
+`POST /api/ausencias` — qualquer role autenticado
+Body: `{ data, motivo }`
+Valida: data e motivo obrigatórios; só 1 ausência ativa por vez (409 se já tiver).
+Snapshot de `usuarioNome/Rg/Graduacao`. Seta `user.ausente = true`.
+Retorna: `{ ausencia }`.
+
+### `server/api/ausencias/[id]/encerrar.patch.ts`
+`PATCH /api/ausencias/:id/encerrar` — dono da ausência ou P1/admin
+Seta `status = 'encerrada'`, `encerradaEm = now`. Seta `user.ausente = false`.
+Retorna: `{ success: true }`.
 
 ### `server/models/Fardamento.ts`
 Schema Mongoose:
