@@ -1,6 +1,10 @@
 export default defineNuxtConfig({
   ssr: false,
 
+  typescript: {
+    typeCheck: false,
+  },
+
   nitro: {
     preset: 'node-server',
     devProxy: {},
