@@ -67,6 +67,13 @@
               </div>
               <RankList :items="store.rankPatrulha" :loading="store.loading" :formatter="formatMinutos" />
             </div>
+
+            <div class="page-card rank-card">
+              <div class="card-header">
+                <span class="card-title">Ranking de Dias Patrulhados</span>
+              </div>
+              <RankList :items="store.rankDias" :loading="store.loading" :formatter="formatDias" />
+            </div>
           </div>
 
           <div class="ranks-items">
@@ -183,6 +190,10 @@ function formatMinutos(mins) {
   if (h > 0 && m > 0) return `${h}h ${m}min`
   if (h > 0) return `${h}h`
   return `${m}min`
+}
+
+function formatDias(dias) {
+  return `${dias} dia${dias !== 1 ? 's' : ''}`
 }
 
 onMounted(() => {
@@ -322,7 +333,7 @@ function logout() {
 
 .ranks-top {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr;
   gap: 1rem;
 }
 

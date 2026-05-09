@@ -7,6 +7,7 @@ export const useApreensaoStore = defineStore('apreensoes', {
     rankGeral: [],
     rankPorItem: {},
     rankPatrulha: [],
+    rankDias: [],
     meusTurnos: null,
     loading: false,
     error: null,
@@ -22,14 +23,16 @@ export const useApreensaoStore = defineStore('apreensoes', {
       this.error = null
       try {
         const api = useApi()
-        const [statsData, patrulhaData] = await Promise.all([
+        const [statsData, patrulhaData, diasData] = await Promise.all([
           api.get(`/api/apreensoes?mes=${mes}&ano=${ano}`),
           api.get(`/api/apreensoes/rank-patrulha?mes=${mes}&ano=${ano}`),
+          api.get(`/api/apreensoes/rank-dias?mes=${mes}&ano=${ano}`),
         ])
         this.totais = statsData.totais
         this.rankGeral = statsData.rankGeral
         this.rankPorItem = statsData.rankPorItem
         this.rankPatrulha = patrulhaData.rank
+        this.rankDias = diasData.rank
       } catch (e) {
         this.error = e.message || 'Erro ao carregar dados'
       } finally {

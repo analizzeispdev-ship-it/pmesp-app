@@ -243,7 +243,9 @@ Layout: sidebar fixa + área principal (topbar + conteúdo), com linguagem visua
 **Composição:** usa `AppSidebar` e `AppTopbar` para reduzir markup da view e centralizar layout institucional.
 **Sidebar:** fixa, tema claro com bordas sutis, navegação com estado ativo em azul institucional, itens "Em breve", avatar do usuário e logout.
 **Topbar:** metadados da página, relógio e usuário logado.
-**Conteúdo:** banner de boas-vindas em card claro, 4 cards de stats (placeholder `—`) e info box de implantação com estilo institucional claro.
+**Conteúdo:** banner de boas-vindas em card claro, 4 cards de stats e info box.
+Stats: Efetivo de Serviço | Meus Dias Patrulhados (+ badge de flag apto/ativo/inativo) | Viaturas em Patrulha | Meus Turnos no Mês.
+Flag de dias patrulhados vem de `atividadeStore.minhaAtividade` (fetched via `fetchMinha()` no `onMounted`), mesmo critério do Registro de Atividade (≥60% úteis=apto, 40-59%=ativo, <40%=inativo).
 **Logout:** `auth.logout()` → `router.push('/login')`.
 **Quadro de Publicações:** seção abaixo do info-box com dois tabs (`quadroTab: ref('avisos')`). Usa `AvisosTab` e `BoletinsTab`. Botão "+ Emitir" (link para `/emitir-boletim`) visível apenas para `auth.canEmitir`. Carrega dados via `pub.fetchAll()` no `onMounted`.
 
@@ -264,7 +266,7 @@ Sidebar institucional fixa do dashboard.
 Store Pinia `apreensoes`. Gerencia stats e registro de apreensões.
 **State:** `totais`, `rankGeral[]`, `rankPorItem{}`, `loading`, `error`, `actionLoading`, `actionError`, `relatorio[]`, `relatorioLoading`
 **Actions:**
-- `fetchStats(mes, ano)` → `GET /api/apreensoes?mes&ano` + `GET /api/apreensoes/rank-patrulha?mes&ano` em paralelo → popula totais, ranks apreensoes e rankPatrulha
+- `fetchStats(mes, ano)` → `GET /api/apreensoes?mes&ano` + `GET /api/apreensoes/rank-patrulha?mes&ano` + `GET /api/apreensoes/rank-dias?mes&ano` em paralelo → popula totais, ranks apreensoes, rankPatrulha e rankDias
 - `registrar(payload)` → `POST /api/apreensoes` → registra
 - `fetchRelatorio()` → `GET /api/apreensoes/relatorio` → last 15 viaturas com apreensões (p3/admin)
 
@@ -304,8 +306,10 @@ Store Pinia `fardamentos`. Gerencia lista de fardamentos ordenados.
 
 ### `src/stores/atividade.js`
 Store Pinia `atividade`. Busca métricas do mês via `GET /api/atividade`.
-**State:** `efetivo[]`, `totalWeekdays`, `mes`, `loading`, `error`
-**Action:** `fetchAll()` → popula state
+**State:** `efetivo[]`, `totalWeekdays`, `mes`, `loading`, `error`, `minhaAtividade`, `minhaAtividadeLoading`
+**Actions:**
+- `fetchAll()` → popula efetivo (P1 only)
+- `fetchMinha()` → `GET /api/atividade/minha` → popula `minhaAtividade` (`{ diasPatrulhados, diasUteisPatrulhados, totalWeekdays, percentual, flag }`)
 
 ### `src/stores/ausencias.js`
 Store Pinia `ausencias`. Gerencia ausências do usuário (ou todo efetivo para P1/admin).
@@ -344,7 +348,7 @@ Layout: AppSidebar + AppTopbar. Conteúdo:
 - `TotaisCard` com totais do mês
 - Seção de rankings: botão "Registrar Apreensão" (todos) + botão "Relatório de Viaturas" (isP3 only)
 - Filtro de mês: `<select>` com últimos 13 meses; ao trocar re-chama `fetchStats(mes, ano)`
-- `ranks-top`: 2 cards lado a lado — RankGeral + RankPatrulha (horas, formatter `formatMinutos`)
+- `ranks-top`: 3 cards lado a lado (grid 3 colunas) — RankGeral + RankPatrulha (horas, `formatMinutos`) + RankDias (dias patrulhados, `formatDias`)
 - `ranks-items`: grid 2-col com 7 RankList por item de apreensão
 - `userViatura` computed: viatura ativa onde o user está na tripulação (via viaturas.ativas)
 - Usa `useApreensaoStore` + `useViaturasStore`

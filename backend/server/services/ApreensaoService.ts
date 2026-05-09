@@ -144,6 +144,58 @@ export class ApreensaoService {
       .slice(0, 10)
   }
 
+  static async getDiasPatrulhadosRank(mes: number, ano: number) {
+    await connectDB()
+    const { start, end } = monthRange(mes, ano)
+    const now = new Date()
+
+    const viaturas = await Viatura.find({
+      abertaEm: { $lte: end },
+      $or: [
+        { encerradaEm: null },
+        { encerradaEm: { $gte: start } },
+      ],
+    })
+      .populate('motorista chefeDeBarca auxiliar1 auxiliar2 auxiliar3', 'name rg graduacao')
+      .lean()
+
+    const daysMap = new Map<string, { info: any; days: Set<string> }>()
+    const crewFields = ['motorista', 'chefeDeBarca', 'auxiliar1', 'auxiliar2', 'auxiliar3']
+
+    for (const v of viaturas as any[]) {
+      const vStart = new Date(Math.max(new Date(v.abertaEm).getTime(), start.getTime()))
+      const closeTime = v.encerradaEm ? new Date(v.encerradaEm) : now
+      const vEnd = new Date(Math.min(closeTime.getTime(), end.getTime()))
+      if (vEnd < vStart) continue
+
+      for (const f of crewFields) {
+        const m = v[f]
+        if (!m) continue
+        const uid = m._id.toString()
+        if (!daysMap.has(uid)) {
+          daysMap.set(uid, {
+            info: { userId: m._id, name: m.name, rg: m.rg ?? '', graduacao: m.graduacao ?? '' },
+            days: new Set(),
+          })
+        }
+        const entry = daysMap.get(uid)!
+        const cur = new Date(vStart)
+        cur.setHours(0, 0, 0, 0)
+        const endDay = new Date(vEnd)
+        endDay.setHours(0, 0, 0, 0)
+        while (cur <= endDay) {
+          entry.days.add(cur.toISOString().split('T')[0])
+          cur.setDate(cur.getDate() + 1)
+        }
+      }
+    }
+
+    return Array.from(daysMap.values())
+      .map(({ info, days }) => ({ ...info, total: days.size }))
+      .sort((a, b) => b.total - a.total)
+      .slice(0, 10)
+  }
+
   static async create(data: {
     viaturaId: string
     userId: string

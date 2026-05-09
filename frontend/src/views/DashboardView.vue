@@ -54,13 +54,16 @@
           <div class="stat-card">
             <div class="stat-icon red">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="10" />
-                <polyline points="12 6 12 12 16 14" />
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                <line x1="16" y1="2" x2="16" y2="6" />
+                <line x1="8" y1="2" x2="8" y2="6" />
+                <line x1="3" y1="10" x2="21" y2="10" />
               </svg>
             </div>
             <div class="stat-info">
-              <span class="stat-value">{{ horasPatrulhaUsuario === null ? '—' : horasPatrulhaUsuario }}</span>
-              <span class="stat-label">Minhas Horas no Mês</span>
+              <span class="stat-value">{{ diasPatrulhadosUsuario === null ? '—' : diasPatrulhadosUsuario }}</span>
+              <span class="stat-label">Meus Dias Patrulhados</span>
+              <span v-if="minhaFlag" class="stat-flag" :class="minhaFlag">{{ flagLabel(minhaFlag) }}</span>
             </div>
           </div>
 
@@ -225,6 +228,7 @@ import { useEfetivoStore } from '@/stores/efetivo'
 import { usePublicacoesStore } from '@/stores/publicacoes'
 import { useViaturasStore } from '@/stores/viaturas'
 import { useApreensaoStore } from '@/stores/apreensoes'
+import { useAtividadeStore } from '@/stores/atividade'
 import { useClock } from '@/composables/useClock'
 import AppSidebar from '@/components/layout/AppSidebar.vue'
 import AppTopbar from '@/components/layout/AppTopbar.vue'
@@ -238,6 +242,7 @@ const efetivo = useEfetivoStore()
 const pub = usePublicacoesStore()
 const viaturas = useViaturasStore()
 const apStore = useApreensaoStore()
+const atividadeStore = useAtividadeStore()
 const route = useRoute()
 const router = useRouter()
 const { currentTime, currentDate } = useClock()
@@ -257,13 +262,12 @@ const roleLabel = computed(() => {
   return map[auth.user?.role] || ''
 })
 
-const horasPatrulhaUsuario = computed(() => {
-  if (apStore.loading) return null
-  const uid = auth.user?.id
-  if (!uid) return '0h'
-  const entry = apStore.rankPatrulha.find((r) => r.userId?.toString() === uid.toString())
-  return entry ? formatMinutos(entry.total) : '0h'
+const diasPatrulhadosUsuario = computed(() => {
+  if (atividadeStore.minhaAtividadeLoading) return null
+  return atividadeStore.minhaAtividade?.diasPatrulhados ?? 0
 })
+
+const minhaFlag = computed(() => atividadeStore.minhaAtividade?.flag ?? null)
 
 const efeivoEmServico = computed(() => {
   if (viaturas.loading) return null
@@ -292,6 +296,12 @@ function formatMinutos(mins) {
   return `${m}min`
 }
 
+function flagLabel(flag) {
+  if (flag === 'apto') return 'Apto para Promoção'
+  if (flag === 'ativo') return 'Ativo'
+  return 'Inativo'
+}
+
 onMounted(async () => {
   await pub.fetchAll()
   viaturas.fetchAtivas()
@@ -300,6 +310,7 @@ onMounted(async () => {
   const ano = now.getFullYear()
   apStore.fetchStats(mes, ano)
   apStore.fetchMeusTurnos(mes, ano)
+  atividadeStore.fetchMinha()
   if (quadroTab.value === 'avisos') pub.markAvisosRead()
   else pub.markBoletinsRead()
 })
@@ -451,6 +462,20 @@ function logout() {
   font-size: var(--fs-sm);
   color: var(--text-faint);
 }
+
+.stat-flag {
+  display: inline-flex;
+  align-self: flex-start;
+  margin-top: 0.35rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  font-size: var(--fs-2xs);
+  font-weight: var(--fw-semibold);
+  white-space: nowrap;
+}
+.stat-flag.apto { background: var(--success-bg); color: var(--success); border: 1px solid #bbf7d0; }
+.stat-flag.ativo { background: var(--surface-brand-soft); color: var(--primary); border: 1px solid var(--primary-light); }
+.stat-flag.inativo { background: var(--error-bg); color: var(--error); border: 1px solid #fca5a5; }
 
 /* Info box */
 .info-box {

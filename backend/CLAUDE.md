@@ -290,6 +290,7 @@ Indexes: `{ createdAt: -1 }`, `{ viaturaId: 1 }`.
 ### `server/services/ApreensaoService.ts`
 - `getStats(mes, ano)` → agrega período: totais por item + rankGeral (top 10 por total) + rankPorItem (top 5 por item)
 - `getPatrulhaRank(mes, ano)` → top 10 officers por minutos patrulhados no período; usa viaturas que se sobrepõem ao mês
+- `getDiasPatrulhadosRank(mes, ano)` → top 10 officers por dias distintos patrulhados no período (inclui FDS); acumula Set<string> de datas por officer
 - `create({ viaturaId, userId, items, origem })` → verifica usuário na viatura via `$or` query, snapshot crew, cria Apreensao
 - `getRelatorio()` → last 15 viaturas (qualquer status) + apreensoes de cada uma
 
@@ -300,6 +301,10 @@ Retorna: `{ totais, rankGeral, rankPorItem }`
 ### `server/api/apreensoes/rank-patrulha.get.ts`
 `GET /api/apreensoes/rank-patrulha?mes=4&ano=2026` — qualquer role autenticado
 Retorna: `{ rank: [{ userId, name, rg, graduacao, total: minutos }] }` top 10 por minutos patrulhados no período
+
+### `server/api/apreensoes/rank-dias.get.ts`
+`GET /api/apreensoes/rank-dias?mes=4&ano=2026` — qualquer role autenticado
+Retorna: `{ rank: [{ userId, name, rg, graduacao, total: dias }] }` top 10 por dias distintos patrulhados no período (contando FDS também)
 
 ### `server/api/apreensoes/index.post.ts`
 `POST /api/apreensoes` — qualquer role autenticado; backend verifica que user está na viatura ativa
@@ -338,6 +343,12 @@ encerradaEm    Date       default: null
 timestamps: true
 ```
 Indexes: `{ usuarioId: 1, status: 1 }`, `{ status: 1, data: -1 }`.
+
+### `server/api/atividade/minha.get.ts`
+`GET /api/atividade/minha` — qualquer role autenticado
+Retorna métricas do mês corrente para o usuário logado:
+`{ diasPatrulhados, diasUteisPatrulhados, totalWeekdays, percentual, flag }`
+Usa `$and` com dois `$or` para filtrar viaturas do período E que contêm o usuário.
 
 ### `server/api/atividade/index.get.ts`
 `GET /api/atividade` — requer cargo p1 ou admin

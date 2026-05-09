@@ -8,6 +8,8 @@ export const useAtividadeStore = defineStore('atividade', {
     mes: null,
     loading: false,
     error: null,
+    minhaAtividade: null,
+    minhaAtividadeLoading: false,
   }),
 
   actions: {
@@ -24,6 +26,19 @@ export const useAtividadeStore = defineStore('atividade', {
         this.error = e.message ?? 'Erro ao carregar registro de atividade'
       } finally {
         this.loading = false
+      }
+    },
+
+    async fetchMinha() {
+      this.minhaAtividadeLoading = true
+      try {
+        const api = useApi()
+        const data = await api.get('/api/atividade/minha')
+        this.minhaAtividade = data
+      } catch {
+        this.minhaAtividade = null
+      } finally {
+        this.minhaAtividadeLoading = false
       }
     },
   },
