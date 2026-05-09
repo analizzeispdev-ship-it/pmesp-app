@@ -62,6 +62,12 @@ const routes = [
     component: () => import('@/views/FrotaView.vue'),
     meta: { requiresAuth: true, requiresCargo: 'p3' },
   },
+  {
+    path: '/fardamentos',
+    name: 'Fardamentos',
+    component: () => import('@/views/FardamentosView.vue'),
+    meta: { requiresAuth: true },
+  },
 ]
 
 const router = createRouter({

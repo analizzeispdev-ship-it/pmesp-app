@@ -41,6 +41,13 @@ server/
 │   │   ├── [id].put.ts           → PUT /api/frota/:id — atualizar veículo (p3/admin)
 │   │   ├── [id].delete.ts        → DELETE /api/frota/:id — soft delete (p3/admin)
 │   │   └── prefixos-disponiveis.get.ts → GET /api/frota/prefixos-disponiveis — prefixos não em uso (any auth)
+│   ├── fardamentos/
+│   │   ├── index.get.ts          → GET /api/fardamentos — lista fardamentos ativos ordenados por `ordem` (any auth)
+│   │   ├── index.post.ts         → POST /api/fardamentos — criar fardamento (p3/admin)
+│   │   └── [id]/
+│   │       ├── index.put.ts      → PUT /api/fardamentos/:id — atualizar fardamento (p3/admin)
+│   │       ├── index.delete.ts   → DELETE /api/fardamentos/:id — soft delete (p3/admin)
+│   │       └── mover.patch.ts    → PATCH /api/fardamentos/:id/mover — swap ordem com adjacente (p3/admin)
 │   └── gestao/
 │       └── efetivo/
 │           ├── index.get.ts
@@ -315,6 +322,54 @@ Body: `{ username, name, rg?, role?, cargo?, graduacao?, dataPromocao?, badge? }
 Gera senha temporária aleatória: `Pmesp@XXXXXX`.
 Retorna: `{ user: {...}, tempPassword }` — único momento em que a senha temporária é exposta.
 Erro 409 se username já existe.
+
+### `server/models/Fardamento.ts`
+Schema Mongoose:
+```
+nome       String   required, trim
+descricao  String   default: ''
+foto       String   default: '' (base64 data URL — max 2MB recommended)
+ordem      Number   required (auto-incrementado na criação: max_ordem + 1)
+maos       String   default: ''
+jaqueta    String   default: ''
+mochila    String   default: ''
+acessorios String   default: ''
+sapatos    String   default: ''
+chapeu     String   default: ''
+camisa     String   default: ''
+coletes    String   default: ''
+adesivos   String   default: ''
+calcas     String   default: ''
+mascara    String   default: ''
+ativo      Boolean  default: true
+timestamps: true
+```
+Index: `{ ativo: 1, ordem: 1 }`.
+
+### `server/api/fardamentos/index.get.ts`
+`GET /api/fardamentos` — qualquer role autenticado
+Retorna: `{ fardamentos: [...] }` — apenas `ativo: true`, ordenados por `ordem`.
+
+### `server/api/fardamentos/index.post.ts`
+`POST /api/fardamentos` — requer cargo p3 ou admin
+Body: `{ nome, descricao?, foto?, maos?, jaqueta?, mochila?, acessorios?, sapatos?, chapeu?, camisa?, coletes?, adesivos?, calcas?, mascara? }`
+Auto-calcula `ordem = max_existing_ordem + 1` (ou 1 se vazio).
+Retorna `{ fardamento }`.
+
+### `server/api/fardamentos/[id]/index.put.ts`
+`PUT /api/fardamentos/:id` — requer cargo p3 ou admin
+Body: mesmos campos do POST (exceto foto que é opcional).
+Retorna `{ fardamento }` atualizado.
+
+### `server/api/fardamentos/[id]/index.delete.ts`
+`DELETE /api/fardamentos/:id` — requer cargo p3 ou admin
+Soft delete: seta `ativo: false`. Retorna `{ success: true }`.
+
+### `server/api/fardamentos/[id]/mover.patch.ts`
+`PATCH /api/fardamentos/:id/mover` — requer cargo p3 ou admin
+Body: `{ direcao: 'cima' | 'baixo' }`
+Encontra fardamento adjacente por `ordem` e faz swap dos valores de `ordem`.
+Se não há adjacente nessa direção, retorna `{ success: true }` sem erro.
 
 ### `server/models/VeiculoFrota.ts`
 Schema Mongoose:

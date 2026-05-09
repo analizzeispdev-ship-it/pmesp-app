@@ -56,6 +56,9 @@ src/
 │   ├── frota/
 │   │   ├── VeiculoCard.vue             → card horizontal por veículo; foto/placeholder, modelo, ano, prefixos badges; editar/remover com confirm inline de 2 etapas
 │   │   └── CadastrarVeiculoModal.vue   → modal create/edit: upload foto (base64, max 2MB), modelo, ano, lista dinâmica de prefixos com add/remove
+│   ├── fardamentos/
+│   │   ├── FardamentoCard.vue          → card vertical; imagem (210px height) com overlay de ações (cima/baixo/editar/excluir com confirm) no topo direito; info (nome, descricao) e 2-col grid dos 11 campos de inventário (esq: maos/jaqueta/mochila/acessorios/sapatos/chapeu; dir: camisa/coletes/adesivos/calcas/mascara); ações visíveis apenas se isP3
+│   │   └── CadastrarFardamentoModal.vue → modal create/edit: foto upload (portrait 80x100, max 2MB), nome (required), descricao textarea, 2-col grid de 11 campos de inventário (texto livre tipo "321/4")
 │   ├── efetivo/
 │   │   ├── EfetivoTable.vue        → tabela de policiais com avatar, cargo, graduação, PAD, cursos, patrulha
 │   │   ├── PadIndicator.vue        → 3 quadradinhos coloridos (0=vazio, 1=dourado, 2=âmbar, 3=vermelho)
@@ -83,7 +86,8 @@ src/
     ├── GestaoEfetivoView.vue
     ├── ViaturaView.vue
     ├── ApreensaoView.vue
-    └── FrotaView.vue
+    ├── FrotaView.vue
+    └── FardamentosView.vue
 ```
 
 ---
@@ -194,6 +198,7 @@ Histórico: `createWebHistory()`.
 | `/viaturas` | `Viaturas` | `ViaturaView` | `requiresAuth: true, requiresCargo: 'p1'` |
 | `/apreensoes` | `Apreensoes` | `ApreensaoView` | `requiresAuth: true` |
 | `/gestao/frota` | `FrotaViaturas` | `FrotaView` | `requiresAuth: true, requiresCargo: 'p3'` |
+| `/fardamentos` | `Fardamentos` | `FardamentosView` | `requiresAuth: true` |
 
 **Guard `beforeEach`:**
 1. Rota pública → passa
@@ -240,6 +245,7 @@ Layout: sidebar fixa + área principal (topbar + conteúdo), com linguagem visua
 Sidebar institucional fixa do dashboard.
 - Recebe `currentPath`, `isAdmin`, `isRh`, `isP3` (Boolean, default false), `initials`, `userName`, `userRank`.
 - Seção "Gestão de Pessoal" visível apenas quando `isRh = true` (cargo p1 ou admin).
+- Link "Fardamentos" em Operacional: visível para todos autenticados (sem `v-if`), rota `/fardamentos`.
 - Seção "Gestão Operacional" visível quando `isP3 = true` (cargo p3 ou admin). Contém link para Frota de Viaturas.
 - Emite `logout`.
 - Exibe branding PMESP, grupos de navegação, itens desabilitados "Em breve" e rodapé do usuário.
@@ -280,6 +286,16 @@ Store Pinia `frota`. Gerencia frota de veículos e prefixos disponíveis.
 - `atualizar(id, payload)` → `PUT /api/frota/:id` → atualiza `veiculos[idx]`
 - `remover(id)` → `DELETE /api/frota/:id` → remove de `veiculos`
 
+### `src/stores/fardamentos.js`
+Store Pinia `fardamentos`. Gerencia lista de fardamentos ordenados.
+**State:** `fardamentos[]`, `loading`, `error`, `actionLoading`, `actionError`
+**Actions:**
+- `fetchAll()` → `GET /api/fardamentos` → popula `fardamentos` (ordenados por `ordem`)
+- `criar(payload)` → `POST /api/fardamentos` → push em `fardamentos`
+- `atualizar(id, payload)` → `PUT /api/fardamentos/:id` → atualiza `fardamentos[idx]`
+- `remover(id)` → `DELETE /api/fardamentos/:id` → filtra de `fardamentos`
+- `mover(id, direcao)` → swap otimista de posição no array + `PATCH /api/fardamentos/:id/mover`; reverte com `fetchAll()` em caso de erro
+
 ### `src/stores/publicacoes.js`
 Store Pinia `publicacoes`. Gerencia avisos e boletins internos.
 **State:** `avisos[]`, `boletins[]`, `loading`, `error`, `submitting`, `submitError`
@@ -319,6 +335,14 @@ Layout: AppSidebar + AppTopbar. Page card com botão "Cadastrar Veículo".
 Lista `VeiculoCard` com callbacks `@editar → CadastrarVeiculoModal` e `@remover → frota.remover`.
 Usa `useFrotaStore`.
 `onMounted`: chama `frota.fetchVeiculos()`.
+
+### `src/views/FardamentosView.vue`
+Rota `/fardamentos` — acesso para todos autenticados.
+Layout: AppSidebar + AppTopbar. Page card com botão "Novo Fardamento" (visível apenas `isP3`).
+Grid `repeat(auto-fill, minmax(220px, 1fr))` de `FardamentoCard`.
+Passa `isFirst/isLast` com base no índice para controle dos botões de mover.
+Emits: `@editar → CadastrarFardamentoModal`, `@remover → store.remover`, `@mover-cima/@mover-baixo → store.mover(id, direcao)`.
+`onMounted`: chama `store.fetchAll()`.
 
 ### `src/views/ViaturaView.vue`
 Rota `/viaturas` — acesso P1 + admin. Gerencia viaturas abertas.
