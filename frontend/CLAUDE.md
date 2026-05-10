@@ -48,6 +48,10 @@ src/
 │   │   ├── AbrirViaturaModal.vue   → modal form: prefixo (select com prefixos da frota; aviso se nenhum disponível), observação, 5 selects de cargo; prop prefixos (Array — prefixos disponíveis da frota); emite confirm(payload)
 │   │   ├── EncerrarViaturaModal.vue → modal confirmação destrutiva; mostra crew; emite confirm
 │   │   └── EditarTripulacaoModal.vue → modal pré-populado com crew atual; selects filtrados; marca "EM OUTRA BARCA"; emite confirm(crew)
+│   ├── institucional/
+│   │   ├── LandingHero.vue      → seção hero (100vh): imagem de fundo, overlay escuro, badge, título, 7 stat cards glassmorphism do mês; props: imagemHero, stats, mes, ano
+│   │   ├── LandingCarousel.vue  → carrossel automático (5s) com prev/next/dots; props: fotos[]
+│   │   └── LandingDestaque.vue  → seção militar destaque: foto circular com anel gradiente dourado, nome, descrição; props: militar { nome, foto, descricao }
 │   ├── apreensoes/
 │   │   ├── TotaisCard.vue          → card de totais mensais por item; props: totais, loading; 7 itens em grid responsivo
 │   │   ├── RankList.vue            → lista de rank reutilizável; props: items[], loading, formatter(Function); medalhas gold/silver/bronze nos top 3; formatter converte total (ex: minutos → "Xh Ymin")
@@ -76,10 +80,13 @@ src/
 ├── router/
 │   └── index.js                    → rotas + guard beforeEach
 ├── stores/
+│   ├── institucional.js            → Pinia store de config institucional; State: config, stats, mes, ano, loading, saving, error, saveError; Actions: fetchConfig() (pública), fetchStats() (pública), saveConfig(updates) (admin — usa fetch com Bearer token)
 │   ├── auth.js                     → Pinia store de autenticação
 │   ├── publicacoes.js              → Pinia store de avisos e boletins internos
 │   └── toast.js                    → Pinia store global de notificações; actions: show(msg, type, duration), hide()
 └── views/
+    ├── InstitucionalView.vue
+    ├── ConfiguracoesView.vue
     ├── LoginView.vue
     ├── ChangePasswordView.vue
     ├── DashboardView.vue
@@ -192,6 +199,7 @@ Histórico: `createWebHistory()`.
 
 | Rota | Nome | Componente | Meta |
 |------|------|-----------|------|
+| `/institucional` | `Institucional` | `InstitucionalView` | `public: true` |
 | `/login` | `Login` | `LoginView` | `public: true` |
 | `/primeiro-acesso` | `ChangePassword` | `ChangePasswordView` | `requiresAuth: true` |
 | `/` | `Dashboard` | `DashboardView` | `requiresAuth: true` |
@@ -205,9 +213,11 @@ Histórico: `createWebHistory()`.
 | `/fardamentos` | `Fardamentos` | `FardamentosView` | `requiresAuth: true` |
 | `/ausencias` | `Ausencias` | `AusenciasView` | `requiresAuth: true` |
 | `/registro-atividade` | `RegistroAtividade` | `AtividadeView` | `requiresAuth: true, requiresCargo: 'p1'` |
+| `/configuracoes` | `Configuracoes` | `ConfiguracoesView` | `requiresAuth: true, requiresAdmin: true` |
 
 **Guard `beforeEach`:**
-1. Rota pública → passa
+1. Rota pública → passa (`/institucional`, `/login`)
+   `requiresAdmin: true` → role !== 'admin' → `/`
 2. Sem token → `/login`
 3. `firstAccess=true` + não é `ChangePassword` → `/primeiro-acesso`
 4. `firstAccess=false` + é `ChangePassword` → `/`
@@ -215,6 +225,14 @@ Histórico: `createWebHistory()`.
 6. `requiresEmitir: true` → `parseInt(graduacao) > 7` e cargo !== 'p1' e não admin → `/`
 
 ---
+
+### `src/views/InstitucionalView.vue`
+Rota `/institucional` — pública. Landing page institucional.
+Nav fixa transparente (logo + botão "Entrar no Sistema" → /login). Renderiza em sequência: `LandingHero` (sempre), `LandingCarousel` (v-if fotosCarrossel.length), `LandingDestaque` (v-if militarDestaque.nome). Footer simples. Chama `store.fetchConfig()` + `store.fetchStats()` em paralelo no `onMounted`.
+
+### `src/views/ConfiguracoesView.vue`
+Rota `/configuracoes` — admin only (`requiresAdmin: true`). Layout: AppSidebar + AppTopbar.
+3 seções: (1) Imagem Hero (upload base64, max 5MB, preview + remover + salvar); (2) Fotos Carrossel (5 slots com upload individual, preview + remover + salvar); (3) Militar Destaque (foto + campos nome + descrição + salvar). Cada seção tem botão "Salvar" independente que chama `store.saveConfig({ campo })`. Carrega config existente no `onMounted` e pré-popula os campos.
 
 ### `src/views/LoginView.vue`
 **Design baseado no Figma PMESP-Site (node 4:5).** Layout institucional claro.

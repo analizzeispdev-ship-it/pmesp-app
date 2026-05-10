@@ -48,6 +48,10 @@ server/
 │   │       ├── index.put.ts      → PUT /api/fardamentos/:id — atualizar fardamento (p3/admin)
 │   │       ├── index.delete.ts   → DELETE /api/fardamentos/:id — soft delete (p3/admin)
 │   │       └── mover.patch.ts    → PATCH /api/fardamentos/:id/mover — swap ordem com adjacente (p3/admin)
+│   ├── institucional/
+│   │   ├── config.get.ts   → GET /api/institucional/config — público; upsert singleton de config
+│   │   ├── config.put.ts   → PUT /api/institucional/config — admin only; atualiza imagemHero, fotosCarrossel, militarDestaque
+│   │   └── stats.get.ts    → GET /api/institucional/stats — público; retorna totais apreensões do mês atual
 │   └── gestao/
 │       └── efetivo/
 │           ├── index.get.ts
@@ -59,6 +63,8 @@ server/
 │   └── graduacoes.ts
 ├── services/
 │   └── ApreensaoService.ts  → getStats(), create(data), getRelatorio()
+├── models/ (continuação)
+│   └── ConfigInstitucional.ts → singleton de config da landing page institucional
 ├── models/
 │   ├── User.ts
 │   ├── Publicacao.ts

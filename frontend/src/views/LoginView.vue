@@ -14,7 +14,7 @@
           <span class="brand-name">Centro de Comando</span>
         </div>
       </div>
-      <span class="back-link">← Voltar à institucional</span>
+      <RouterLink to="/institucional" class="back-link">← Voltar à institucional</RouterLink>
     </header>
 
     <!-- Layout principal -->
@@ -208,7 +208,7 @@
 
 <script setup>
 import { reactive, ref, onMounted, onBeforeUnmount } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, RouterLink } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useApi } from '@/composables/useApi'
 

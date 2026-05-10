@@ -3,6 +3,12 @@ import { useAuthStore } from '@/stores/auth'
 
 const routes = [
   {
+    path: '/institucional',
+    name: 'Institucional',
+    component: () => import('@/views/InstitucionalView.vue'),
+    meta: { public: true },
+  },
+  {
     path: '/login',
     name: 'Login',
     component: () => import('@/views/LoginView.vue'),
@@ -80,6 +86,12 @@ const routes = [
     component: () => import('@/views/AtividadeView.vue'),
     meta: { requiresAuth: true, requiresCargo: 'p1' },
   },
+  {
+    path: '/configuracoes',
+    name: 'Configuracoes',
+    component: () => import('@/views/ConfiguracoesView.vue'),
+    meta: { requiresAuth: true, requiresAdmin: true },
+  },
 ]
 
 const router = createRouter({
@@ -99,6 +111,10 @@ router.beforeEach((to) => {
   }
 
   if (!auth.needsPasswordChange && to.name === 'ChangePassword') {
+    return '/'
+  }
+
+  if (to.meta.requiresAdmin && auth.user?.role !== 'admin') {
     return '/'
   }
 
