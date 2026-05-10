@@ -110,7 +110,7 @@
           <div>
             <p class="info-title">Sistema em implantação</p>
             <p class="info-desc">
-              O sistema está em fase inicial. Os módulos de Efetivo, Ocorrências, Viaturas e Relatórios
+              O sistema está em fase inicial. Os módulos de Ocorrências, Relatórios e Configurações
               serão disponibilizados em breve. Utilize o menu lateral para navegar quando os módulos forem liberados.
             </p>
           </div>
