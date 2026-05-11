@@ -66,6 +66,22 @@ export const useGestaoEfetivoStore = defineStore('gestaoEfetivo', {
       }
     },
 
+    async editarCargo(id, cargo) {
+      this.actionLoading = true
+      this.actionError = null
+      try {
+        const api = useApi()
+        const data = await api.patch(`/api/gestao/efetivo/${id}/cargo`, { cargo })
+        this._replaceAtivo(data.officer)
+        return data.officer
+      } catch (err) {
+        this.actionError = err.message || 'Erro ao alterar cargo'
+        throw err
+      } finally {
+        this.actionLoading = false
+      }
+    },
+
     async exonerar(id) {
       this.actionLoading = true
       this.actionError = null

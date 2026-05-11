@@ -70,6 +70,7 @@
             @advertencia="openAdvertencia"
             @exonerar="openExonerar"
             @ver-advertencias="openVerAdvertencias"
+            @editar-cargo="openEditarCargo"
           />
 
           <ExoneradosTab
@@ -113,6 +114,14 @@
     :officer="selectedOfficer"
     @close="closeModals"
   />
+
+  <EditarCargoModal
+    :open="modal.editarCargo"
+    :officer="selectedOfficer"
+    :loading="store.actionLoading"
+    @close="closeModals"
+    @confirm="onEditarCargo"
+  />
 </template>
 
 <script setup>
@@ -130,6 +139,7 @@ import PromoverModal from '@/components/gestao/PromoverModal.vue'
 import AdvertenciaModal from '@/components/gestao/AdvertenciaModal.vue'
 import ExonerarModal from '@/components/gestao/ExonerarModal.vue'
 import VerAdvertenciasModal from '@/components/gestao/VerAdvertenciasModal.vue'
+import EditarCargoModal from '@/components/gestao/EditarCargoModal.vue'
 
 const auth = useAuthStore()
 const store = useGestaoEfetivoStore()
@@ -140,7 +150,7 @@ const { currentTime, currentDate } = useClock()
 
 const activeTab = ref('ativos')
 const selectedOfficer = ref(null)
-const modal = reactive({ promover: false, advertencia: false, exonerar: false, verAdvertencias: false })
+const modal = reactive({ promover: false, advertencia: false, exonerar: false, verAdvertencias: false, editarCargo: false })
 
 watch(() => store.actionError, (err) => {
   if (err) toast.show(err, 'error')
@@ -167,12 +177,14 @@ function openPromover(officer) { selectedOfficer.value = officer; modal.promover
 function openAdvertencia(officer) { selectedOfficer.value = officer; modal.advertencia = true; store.actionError = null }
 function openExonerar(officer) { selectedOfficer.value = officer; modal.exonerar = true; store.actionError = null }
 function openVerAdvertencias(officer) { selectedOfficer.value = officer; modal.verAdvertencias = true }
+function openEditarCargo(officer) { selectedOfficer.value = officer; modal.editarCargo = true; store.actionError = null }
 
 function closeModals() {
   modal.promover = false
   modal.advertencia = false
   modal.exonerar = false
   modal.verAdvertencias = false
+  modal.editarCargo = false
 }
 
 async function onPromover(novaGraduacao) {
@@ -188,6 +200,14 @@ async function onAdvertencia(descricao) {
     await store.darAdvertencia(selectedOfficer.value._id, descricao)
     closeModals()
     toast.show(`Advertência registrada para ${selectedOfficer.value.name}.`)
+  } catch {}
+}
+
+async function onEditarCargo(cargo) {
+  try {
+    await store.editarCargo(selectedOfficer.value._id, cargo)
+    closeModals()
+    toast.show(`Cargo de ${selectedOfficer.value.name} atualizado com sucesso.`)
   } catch {}
 }
 

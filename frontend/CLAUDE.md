@@ -38,11 +38,13 @@ src/
 │   ├── gestao/
 │   │   ├── CadastroUsuarioForm.vue → form com nome, RG, username, graduação, cargo; emite `submit` com dados validados; mostra preview do displayName
 │   │   ├── SenhaTempCard.vue      → exibe usuário criado + senha temporária com botão copiar + aviso de exibição única
-│   │   ├── EfetivoAtivoTab.vue    → tabela com efetivo ativo; emite `promover`, `advertencia`, `exonerar` por officer
+│   │   ├── EfetivoAtivoTab.vue    → tabela com efetivo ativo; emite `promover`, `advertencia`, `exonerar`, `editarCargo` por officer
 │   │   ├── ExoneradosTab.vue      → tabela somente-leitura de policiais exonerados (active: false)
 │   │   ├── PromoverModal.vue      → modal overlay; select de nova graduação com grupos; emite `confirm(novaGraduacao)`
 │   │   ├── AdvertenciaModal.vue   → modal overlay; textarea motivo + contador PAD; emite `confirm(descricao)`
-│   │   └── ExonerarModal.vue      → modal overlay de confirmação destrutiva; emite `confirm`
+│   │   ├── ExonerarModal.vue      → modal overlay de confirmação destrutiva; emite `confirm`
+│   │   ├── EditarCargoModal.vue   → modal overlay; select de novo cargo com descrição; emite `confirm(novoCargo)`
+│   │   └── CriarAvaliacaoModal.vue → modal overlay; select estagiário, slider nota 0-10 com feedback visual colorido, textarea avaliação (required) e pontoAtencao (optional); emite `confirm(payload)`
 │   ├── viaturas/
 │   │   ├── ViaturaDropdown.vue     → item colapsável; props: viatura, showEncerrar, showEdit, actionLoading; emits: encerrar(id), edit-crew(viatura)
 │   │   ├── AbrirViaturaModal.vue   → modal form: prefixo (select com prefixos da frota; aviso se nenhum disponível), observação, 5 selects de cargo; prop prefixos (Array — prefixos disponíveis da frota); emite confirm(payload)
@@ -98,7 +100,8 @@ src/
     ├── ApreensaoView.vue
     ├── FrotaView.vue
     ├── FardamentosView.vue
-    └── AusenciasView.vue
+    ├── AusenciasView.vue
+    └── AvaliacaoEstagioView.vue
 ```
 
 ---
@@ -213,6 +216,7 @@ Histórico: `createWebHistory()`.
 | `/fardamentos` | `Fardamentos` | `FardamentosView` | `requiresAuth: true` |
 | `/ausencias` | `Ausencias` | `AusenciasView` | `requiresAuth: true` |
 | `/registro-atividade` | `RegistroAtividade` | `AtividadeView` | `requiresAuth: true, requiresCargo: 'p1'` |
+| `/avaliacoes-estagio` | `AvaliacoesEstagio` | `AvaliacaoEstagioView` | `requiresAuth: true` |
 | `/configuracoes` | `Configuracoes` | `ConfiguracoesView` | `requiresAuth: true, requiresAdmin: true` |
 
 **Guard `beforeEach`:**
@@ -296,6 +300,14 @@ Store Pinia `viaturas`. Gerencia viaturas em patrulha.
 - `fetchAtivas()` → `GET /api/viaturas` → popula `ativas`
 - `abrirViatura(payload)` → `POST /api/viaturas` → insere no topo de `ativas`
 - `encerrarViatura(id)` → `PATCH /api/viaturas/:id/encerrar` → remove de `ativas`
+
+### `src/stores/avaliacaoEstagio.js`
+Store Pinia `avaliacaoEstagio`. Gerencia avaliações de estágio com paginação (20 por página).
+**State:** `avaliacoes[]`, `total`, `page`, `pages`, `loading`, `error`, `actionLoading`, `actionError`, `estagiarios[]`, `avaliadores[]`, `membrosLoading`
+**Actions:**
+- `fetchAvaliacoes(params)` → `GET /api/avaliacoes-estagio` (params: page, dataInicio, dataFim, nota_min, nota_max, avaliadorId, estagiarioId)
+- `fetchMembros()` → `GET /api/avaliacoes-estagio/membros` → popula estagiarios + avaliadores (avaliadores só p1/admin)
+- `criar(payload)` → `POST /api/avaliacoes-estagio`
 
 ### `src/stores/gestao.js`
 Store Pinia `gestao`. Gerencia criação de usuários via `POST /api/users`.

@@ -58,6 +58,15 @@
 
         <td class="col-actions">
           <div class="action-btns">
+            <button class="btn-action edit-cargo" title="Editar Cargo" @click="$emit('editarCargo', officer)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20 7H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z" />
+                <circle cx="12" cy="12" r="1" />
+                <circle cx="7" cy="12" r="1" />
+                <circle cx="17" cy="12" r="1" />
+              </svg>
+              Cargo
+            </button>
             <button class="btn-action promote" title="Promover" @click="$emit('promover', officer)">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <polyline points="18 15 12 9 6 15" />
@@ -108,7 +117,7 @@ defineProps({
   loading: { type: Boolean, default: false },
 })
 
-defineEmits(['promover', 'advertencia', 'exonerar', 'verAdvertencias'])
+defineEmits(['promover', 'advertencia', 'exonerar', 'verAdvertencias', 'editarCargo'])
 
 function getGraduacaoLabel(v) { return GRADUACOES.find((g) => g.value === v)?.label ?? v }
 function getGraduacaoPrefix(v) { return GRADUACOES.find((g) => g.value === v)?.nickPrefix ?? '' }
@@ -203,6 +212,14 @@ function dotClass(i, count) {
 }
 
 .btn-action svg { width: 13px; height: 13px; flex-shrink: 0; }
+
+.btn-action.edit-cargo {
+  background: var(--surface-subtle);
+  color: var(--text-soft);
+  border-color: var(--border);
+}
+
+.btn-action.edit-cargo:hover { background: var(--accent-light, #e6c96e); color: #7a5c00; border-color: var(--accent); }
 
 .btn-action.promote {
   background: var(--surface-brand-soft);

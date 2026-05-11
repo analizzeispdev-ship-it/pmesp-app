@@ -87,6 +87,12 @@ const routes = [
     meta: { requiresAuth: true, requiresCargo: 'p1' },
   },
   {
+    path: '/avaliacoes-estagio',
+    name: 'AvaliacoesEstagio',
+    component: () => import('@/views/AvaliacaoEstagioView.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
     path: '/configuracoes',
     name: 'Configuracoes',
     component: () => import('@/views/ConfiguracoesView.vue'),

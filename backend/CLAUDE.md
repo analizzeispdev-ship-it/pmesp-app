@@ -52,13 +52,18 @@ server/
 │   │   ├── config.get.ts   → GET /api/institucional/config — público; upsert singleton de config
 │   │   ├── config.put.ts   → PUT /api/institucional/config — admin only; atualiza imagemHero, fotosCarrossel, militarDestaque
 │   │   └── stats.get.ts    → GET /api/institucional/stats — público; retorna totais apreensões do mês atual
-│   └── gestao/
-│       └── efetivo/
-│           ├── index.get.ts
-│           └── [id]/
-│               ├── promover.patch.ts
-│               ├── advertencia.patch.ts
-│               └── exonerar.patch.ts
+│   ├── gestao/
+│   │   └── efetivo/
+│   │       ├── index.get.ts
+│   │       └── [id]/
+│   │           ├── promover.patch.ts
+│   │           ├── advertencia.patch.ts
+│   │           ├── exonerar.patch.ts
+│   │           └── cargo.patch.ts
+│   └── avaliacoes-estagio/
+│       ├── index.get.ts     → GET /api/avaliacoes-estagio — paginado (20); estagio=próprias sem avaliador; officer=suas avaliações; p1/admin=todas+filtros (nota_min,nota_max,avaliadorId,estagiarioId,dataInicio,dataFim)
+│       ├── index.post.ts    → POST /api/avaliacoes-estagio — cria avaliação; proibido para cargo estagio; campos: estagiarioId, avaliacao, nota (0-10), pontoAtencao?
+│       └── membros.get.ts   → GET /api/avaliacoes-estagio/membros — estagiarios[] para todos; avaliadores[] só p1/admin
 ├── constants/
 │   └── graduacoes.ts
 ├── services/
@@ -69,8 +74,9 @@ server/
 │   ├── User.ts
 │   ├── Publicacao.ts
 │   ├── Viatura.ts
-│   ├── Apreensao.ts         → viaturaId, viaturaPrefixo, membros[], 7 campos numéricos de itens, origem, registradoPorId
-│   └── VeiculoFrota.ts      → modelo, ano, foto (base64), prefixos[], ativo
+│   ├── Apreensao.ts              → viaturaId, viaturaPrefixo, membros[], 7 campos numéricos de itens, origem, registradoPorId
+│   ├── VeiculoFrota.ts           → modelo, ano, foto (base64), prefixos[], ativo
+│   └── AvaliacaoEstagio.ts       → avaliadorId/Nome/Rg, estagiarioId/Nome/Rg, avaliacao, pontoAtencao, nota (0-10), timestamps
 ├── middleware/
 │   ├── 01.cors.ts
 │   └── 02.rateLimit.ts
