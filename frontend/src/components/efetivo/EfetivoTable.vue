@@ -145,6 +145,7 @@ function formatDate(dateStr) {
 .cargo-badge.cargo-p5 { background: var(--success-bg); color: var(--success); border-color: #bbf7d0; }
 .cargo-badge.cargo-estagio { background: var(--danger-soft); color: var(--error); border-color: var(--error); }
 .cargo-badge.cargo-rocam { background: var(--surface-subtle); color: var(--accent); border-color: var(--accent-light); }
+.cargo-badge.cargo-bracal_rocam { background: var(--warning-soft); color: var(--warning); border-color: var(--accent-light); }
 
 .grad-cell { display: flex; align-items: center; gap: 0.4rem; }
 .grad-prefix { font-size: var(--fs-md); line-height: 1; }

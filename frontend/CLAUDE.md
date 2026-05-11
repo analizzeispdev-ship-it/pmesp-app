@@ -219,7 +219,7 @@ Histórico: `createWebHistory()`.
 | `/ausencias` | `Ausencias` | `AusenciasView` | `requiresAuth: true` |
 | `/registro-atividade` | `RegistroAtividade` | `AtividadeView` | `requiresAuth: true, requiresCargo: 'p1'` |
 | `/avaliacoes-estagio` | `AvaliacoesEstagio` | `AvaliacaoEstagioView` | `requiresAuth: true` |
-| `/avaliacoes-rocam` | `AvaliacoesRocam` | `AvaliacaoRocamView` | `requiresAuth: true` |
+| `/avaliacoes-rocam` | `AvaliacoesRocam` | `AvaliacaoRocamView` | `requiresAuth: true, requiresRocamAccess: true` |
 | `/configuracoes` | `Configuracoes` | `ConfiguracoesView` | `requiresAuth: true, requiresAdmin: true` |
 
 **Guard `beforeEach`:**
@@ -228,8 +228,9 @@ Histórico: `createWebHistory()`.
 2. Sem token → `/login`
 3. `firstAccess=true` + não é `ChangePassword` → `/primeiro-acesso`
 4. `firstAccess=false` + é `ChangePassword` → `/`
-5. `requiresCargo: 'p1'` → cargo !== 'p1' e não admin → `/`
-6. `requiresEmitir: true` → `parseInt(graduacao) > 7` e cargo !== 'p1' e não admin → `/`
+5. `requiresCargo: 'p1'` → cargo não inclui 'p1' e não admin → `/`
+6. `requiresRocamAccess: true` → cargo não inclui 'rocam', 'bracal_rocam', 'p1' e não admin → `/`
+7. `requiresEmitir: true` → `parseInt(graduacao) > 7` e cargo não inclui 'p1' e não admin → `/`
 
 ---
 

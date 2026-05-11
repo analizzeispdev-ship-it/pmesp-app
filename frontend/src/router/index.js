@@ -96,7 +96,7 @@ const routes = [
     path: '/avaliacoes-rocam',
     name: 'AvaliacoesRocam',
     component: () => import('@/views/AvaliacaoRocamView.vue'),
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, requiresRocamAccess: true },
   },
   {
     path: '/configuracoes',
@@ -132,6 +132,12 @@ router.beforeEach((to) => {
 
   if (to.meta.requiresCargo && !auth.user?.cargo?.includes(to.meta.requiresCargo) && auth.user?.role !== 'admin') {
     return '/'
+  }
+
+  if (to.meta.requiresRocamAccess) {
+    const cargo = auth.user?.cargo ?? []
+    const hasRocamAccess = cargo.includes('rocam') || cargo.includes('bracal_rocam') || cargo.includes('p1') || auth.user?.role === 'admin'
+    if (!hasRocamAccess) return '/'
   }
 
   if (to.meta.requiresEmitir) {

@@ -185,6 +185,7 @@ function dotClass(i, count) {
 .cargo-badge.cargo-p5 { background: var(--success-bg); color: var(--success); }
 .cargo-badge.cargo-estagio { background: var(--danger-soft); color: var(--error); }
 .cargo-badge.cargo-rocam { background: var(--surface-subtle); color: var(--accent); border-color: var(--accent-light); }
+.cargo-badge.cargo-bracal_rocam { background: var(--warning-soft); color: var(--warning); border-color: var(--accent-light); }
 
 .pad-dots { display: flex; gap: 4px; justify-content: center; }
 

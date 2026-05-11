@@ -175,6 +175,7 @@
       </RouterLink>
 
       <RouterLink
+        v-if="canRocam"
         to="/avaliacoes-rocam"
         class="nav-item"
         :class="{ active: currentPath === '/avaliacoes-rocam' }"
@@ -287,10 +288,17 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { RouterLink } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 
 const isOpen = ref(false)
+const auth = useAuthStore()
+const canRocam = computed(() =>
+  auth.user?.cargo?.includes('rocam') ||
+  auth.user?.cargo?.includes('bracal_rocam') ||
+  auth.isRh
+)
 
 defineProps({
   currentPath: {

@@ -17,10 +17,9 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 401, message: 'Token inválido ou expirado' })
   }
 
-  const ACTIVE_CARGOS = ['padrao', 'p1', 'p3', 'p5']
-  const isActiveOfficer = payload.cargo.some((c: string) => ACTIVE_CARGOS.includes(c)) || payload.role === 'admin'
-  if (!isActiveOfficer) {
-    throw createError({ statusCode: 403, message: 'Estagiários ROCAM não podem criar avaliações' })
+  const canCreate = payload.cargo.includes('bracal_rocam') || payload.cargo.includes('p1') || payload.role === 'admin'
+  if (!canCreate) {
+    throw createError({ statusCode: 403, message: 'Apenas Braçais ROCAM podem criar avaliações ROCAM' })
   }
 
   const body = await readBody(event)

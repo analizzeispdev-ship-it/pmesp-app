@@ -141,7 +141,7 @@ Graduações (value numérico, 1=mais alto, 14=mais baixo):
 `'14'` Sd 2° Cl, `'13'` Sd 1° Cl, `'12'` Cabo, `'11'` 3° Sgt, `'10'` 2° Sgt, `'9'` 1° Sgt,
 `'8'` Subtenente, `'7'` Asp. Oficial (✯), `'6'` 2° Ten (✧), `'5'` 1° Ten (✧✧),
 `'4'` Capitão (✧✧✧), `'3'` Major (✵✧✧), `'2'` Ten. Coronel (✵✵✧), `'1'` Coronel (✵✵✵)
-Cargos: `padrao`, `p1` (RH), `p3` (Operacional), `p5` (Comunicação), `estagio`, `rocam` (Estágio ROCAM)
+Cargos: `padrao`, `p1` (RH), `p3` (Operacional), `p5` (Comunicação), `estagio`, `rocam` (Estágio ROCAM), `bracal_rocam` (Braçal ROCAM — avaliador ROCAM)
 
 ### `server/models/User.ts`
 
@@ -495,14 +495,14 @@ Export com proteção de registro duplicado: `mongoose.models.AvaliacaoRocam || 
 
 ### `server/api/avaliacoes-rocam/index.get.ts`
 `GET /api/avaliacoes-rocam` — requer Bearer token (qualquer role)
-- `isRocam` (cargo=rocam): filtra por `avaliadoId = payload.id`; resposta omite campos avaliador
-- `!isP1`: filtra por `avaliadorId = payload.id`
+- `isRocam` (cargo tem 'rocam' MAS não 'bracal_rocam' e não p1/admin): filtra por `avaliadoId = payload.id`; resposta omite campos avaliador
+- `bracal_rocam` (não p1/admin): filtra por `avaliadorId = payload.id`
 - `isP1/admin`: sem filtro de pessoa + filtros extras via query: `nota_min`, `nota_max`, `avaliadorId`, `avaliadoId`, `dataInicio`, `dataFim`
 Paginação: 20 por página. Retorna: `{ avaliacoes, total, page, pages }`.
 
 ### `server/api/avaliacoes-rocam/index.post.ts`
 `POST /api/avaliacoes-rocam` — requer Bearer token
-Bloqueado para `cargo === 'rocam'` (403).
+Permitido apenas para `cargo.includes('bracal_rocam')` ou `cargo.includes('p1')` ou `role === 'admin'`; demais recebem 403.
 Body: `{ avaliadoId, avaliacao, pontoAtencao?, nota }`
 Valida: avaliadoId e avaliacao obrigatórios; nota 0-10 (Math.round).
 Busca avaliador por `payload.id` no DB (JWT não tem nome). Valida avaliado: `User.findOne({ _id: avaliadoId, active: true, cargo: 'rocam' })`.
@@ -511,8 +511,8 @@ Retorna: `{ avaliacao }`.
 ### `server/api/avaliacoes-rocam/membros.get.ts`
 `GET /api/avaliacoes-rocam/membros` — requer Bearer token (qualquer role)
 Retorna:
-- `membros`: `User.find({ active: true, cargo: 'rocam' })` — para todos autenticados
-- `avaliadores`: `User.find({ active: true, cargo: { $ne: 'rocam' }, role: { $ne: 'admin' } })` — só para p1/admin
+- `membros`: `User.find({ active: true, cargo: 'rocam' })` — policiais ROCAM que podem ser avaliados; para todos autenticados
+- `avaliadores`: `User.find({ active: true, cargo: { $in: ['bracal_rocam', 'p1'] }, role: { $ne: 'admin' } })` — só para p1/admin (usado em filtros)
 
 ---
 

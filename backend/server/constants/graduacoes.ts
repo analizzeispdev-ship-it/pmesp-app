@@ -120,6 +120,7 @@ export const CARGOS: Cargo[] = [
   { label: 'P5 - Comunicação', value: 'p5', description: 'Comunicação' },
   { label: 'Estágio Operacional', value: 'estagio', description: 'Estágio operacional' },
   { label: 'Estágio ROCAM', value: 'rocam', description: 'Estágio ROCAM' },
+  { label: 'Braçal ROCAM', value: 'bracal_rocam', description: 'Braçal ROCAM — avalia policiais ROCAM' },
 ]
 
 export const GRADUACAO_VALUES = GRADUACOES.map((g) => g.value)

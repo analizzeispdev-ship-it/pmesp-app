@@ -32,7 +32,7 @@
               <h3 class="card-title">Avaliações ROCAM</h3>
               <p class="card-sub">{{ cardSubtitle }}</p>
             </div>
-            <button v-if="!isRocam" class="btn-criar" @click="openCriar">
+            <button v-if="canCreateRocam" class="btn-criar" @click="openCriar">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
               </svg>
@@ -185,9 +185,11 @@ const route = useRoute()
 const router = useRouter()
 const { currentTime, currentDate } = useClock()
 
-const ACTIVE_CARGOS = ['padrao', 'p1', 'p3', 'p5']
+const canCreateRocam = computed(() =>
+  auth.user?.cargo?.includes('bracal_rocam') || auth.isRh
+)
 const isRocam = computed(() =>
-  auth.user?.cargo?.includes('rocam') && !auth.user?.cargo?.some(c => ACTIVE_CARGOS.includes(c))
+  auth.user?.cargo?.includes('rocam') && !auth.user?.cargo?.includes('bracal_rocam') && !auth.isRh
 )
 const isP1 = computed(() => auth.isRh)
 
@@ -231,9 +233,9 @@ const breadcrumb = computed(() => {
 })
 
 const cardSubtitle = computed(() => {
-  if (isRocam.value) return 'Suas avaliações recebidas no ROCAM.'
+  if (isRocam.value) return 'Suas avaliações recebidas como Estágio ROCAM.'
   if (isP1.value) return 'Todas as avaliações ROCAM do efetivo.'
-  return 'Avaliações ROCAM que você realizou.'
+  return 'Avaliações ROCAM que você realizou como Braçal.'
 })
 
 onMounted(async () => {

@@ -27,7 +27,7 @@ export default defineEventHandler(async (event) => {
 
   let avaliadores: any[] = []
   if (isP1) {
-    avaliadores = await User.find({ active: true, cargo: { $in: ['padrao', 'p1', 'p3', 'p5'] }, role: { $ne: 'admin' } })
+    avaliadores = await User.find({ active: true, cargo: { $in: ['bracal_rocam', 'p1'] }, role: { $ne: 'admin' } })
       .select('_id name rg')
       .sort({ name: 1 })
       .lean()
