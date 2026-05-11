@@ -105,6 +105,7 @@ export const CARGOS = [
   { label: 'P3 - Operacional', value: 'p3', description: 'Operacional' },
   { label: 'P5 - Comunicação', value: 'p5', description: 'Comunicação' },
   { label: 'Estágio Operacional', value: 'estagio', description: 'Estágio operacional' },
+  { label: 'Estágio ROCAM', value: 'rocam', description: 'Estágio ROCAM' },
 ]
 
 export function getGraduacao(value) {

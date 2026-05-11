@@ -93,6 +93,12 @@ const routes = [
     meta: { requiresAuth: true },
   },
   {
+    path: '/avaliacoes-rocam',
+    name: 'AvaliacoesRocam',
+    component: () => import('@/views/AvaliacaoRocamView.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
     path: '/configuracoes',
     name: 'Configuracoes',
     component: () => import('@/views/ConfiguracoesView.vue'),

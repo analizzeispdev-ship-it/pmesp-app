@@ -136,8 +136,8 @@ watch(() => props.open, (val) => {
 function handleFoto(event) {
   const file = event.target.files?.[0]
   if (!file) return
-  if (file.size > 2 * 1024 * 1024) {
-    fotoError.value = 'Imagem muito grande. Máximo 2MB.'
+  if (file.size > 10 * 1024 * 1024) {
+    fotoError.value = 'Imagem muito grande. Máximo 10MB.'
     event.target.value = ''
     return
   }

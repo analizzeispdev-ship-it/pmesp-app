@@ -60,10 +60,14 @@ server/
 │   │           ├── advertencia.patch.ts
 │   │           ├── exonerar.patch.ts
 │   │           └── cargo.patch.ts
-│   └── avaliacoes-estagio/
-│       ├── index.get.ts     → GET /api/avaliacoes-estagio — paginado (20); estagio=próprias sem avaliador; officer=suas avaliações; p1/admin=todas+filtros (nota_min,nota_max,avaliadorId,estagiarioId,dataInicio,dataFim)
-│       ├── index.post.ts    → POST /api/avaliacoes-estagio — cria avaliação; proibido para cargo estagio; campos: estagiarioId, avaliacao, nota (0-10), pontoAtencao?
-│       └── membros.get.ts   → GET /api/avaliacoes-estagio/membros — estagiarios[] para todos; avaliadores[] só p1/admin
+│   ├── avaliacoes-estagio/
+│   │   ├── index.get.ts     → GET /api/avaliacoes-estagio — paginado (20); estagio=próprias sem avaliador; officer=suas avaliações; p1/admin=todas+filtros (nota_min,nota_max,avaliadorId,estagiarioId,dataInicio,dataFim)
+│   │   ├── index.post.ts    → POST /api/avaliacoes-estagio — cria avaliação; proibido para cargo estagio; campos: estagiarioId, avaliacao, nota (0-10), pontoAtencao?
+│   │   └── membros.get.ts   → GET /api/avaliacoes-estagio/membros — estagiarios[] para todos; avaliadores[] só p1/admin
+│   └── avaliacoes-rocam/
+│       ├── index.get.ts     → GET /api/avaliacoes-rocam — paginado (20); rocam=próprias sem avaliador; officer=suas avaliações; p1/admin=todas+filtros (nota_min,nota_max,avaliadorId,avaliadoId,dataInicio,dataFim)
+│       ├── index.post.ts    → POST /api/avaliacoes-rocam — cria avaliação; proibido para cargo rocam; campos: avaliadoId, avaliacao, nota (0-10), pontoAtencao?
+│       └── membros.get.ts   → GET /api/avaliacoes-rocam/membros — membros[] (policiais ROCAM) para todos; avaliadores[] só p1/admin
 ├── constants/
 │   └── graduacoes.ts
 ├── services/
@@ -76,7 +80,8 @@ server/
 │   ├── Viatura.ts
 │   ├── Apreensao.ts              → viaturaId, viaturaPrefixo, membros[], 7 campos numéricos de itens, origem, registradoPorId
 │   ├── VeiculoFrota.ts           → modelo, ano, foto (base64), prefixos[], ativo
-│   └── AvaliacaoEstagio.ts       → avaliadorId/Nome/Rg, estagiarioId/Nome/Rg, avaliacao, pontoAtencao, nota (0-10), timestamps
+│   ├── AvaliacaoEstagio.ts       → avaliadorId/Nome/Rg, estagiarioId/Nome/Rg, avaliacao, pontoAtencao, nota (0-10), timestamps
+│   └── AvaliacaoRocam.ts         → avaliadorId/Nome/Rg, avaliadoId/Nome/Rg, avaliacao, pontoAtencao, nota (0-10), timestamps
 ├── middleware/
 │   ├── 01.cors.ts
 │   └── 02.rateLimit.ts
@@ -136,7 +141,7 @@ Graduações (value numérico, 1=mais alto, 14=mais baixo):
 `'14'` Sd 2° Cl, `'13'` Sd 1° Cl, `'12'` Cabo, `'11'` 3° Sgt, `'10'` 2° Sgt, `'9'` 1° Sgt,
 `'8'` Subtenente, `'7'` Asp. Oficial (✯), `'6'` 2° Ten (✧), `'5'` 1° Ten (✧✧),
 `'4'` Capitão (✧✧✧), `'3'` Major (✵✧✧), `'2'` Ten. Coronel (✵✵✧), `'1'` Coronel (✵✵✵)
-Cargos: `padrao`, `p1` (RH), `p3` (Operacional), `p5` (Comunicação), `estagio`
+Cargos: `padrao`, `p1` (RH), `p3` (Operacional), `p5` (Comunicação), `estagio`, `rocam` (Estágio ROCAM)
 
 ### `server/models/User.ts`
 
@@ -147,7 +152,7 @@ password       String   required (bcrypt hash, salt 12)
 name           String   required
 rg             String   default: ''
 role           'admin' | 'supervisor' | 'officer'  default: 'officer'
-cargo          'padrao' | 'p1' | 'p3' | 'p5' | 'estagio'  default: 'padrao'
+cargo          'padrao' | 'p1' | 'p3' | 'p5' | 'estagio' | 'rocam'  default: 'padrao'
 graduacao      String   enum de GRADUACAO_VALUES  default: '14'
 dataPromocao   Date     default: null
 cursos         [ObjectId]  ref: 'Course'  default: []
@@ -471,6 +476,43 @@ Soft delete: seta `ativo: false`. Retorna `{ success: true }`.
 ### `server/api/frota/prefixos-disponiveis.get.ts`
 `GET /api/frota/prefixos-disponiveis` — qualquer role autenticado
 Retorna: `{ prefixos: [{ prefixo, modelo, ano, veiculoId }] }` — prefixos de veículos ativos que não estão em uso em nenhuma viatura ativa. Ordenados alfabeticamente por prefixo.
+
+### `server/models/AvaliacaoRocam.ts`
+Schema Mongoose:
+```
+avaliadorId    ObjectId   ref: 'User'  required
+avaliadorNome  String     required (snapshot)
+avaliadorRg    String     default: ''
+avaliadoId     ObjectId   ref: 'User'  required
+avaliadoNome   String     required (snapshot)
+avaliadoRg     String     default: ''
+avaliacao      String     required, trim
+pontoAtencao   String     default: ''
+nota           Number     required, min: 0, max: 10
+timestamps: true
+```
+Export com proteção de registro duplicado: `mongoose.models.AvaliacaoRocam || mongoose.model(...)`.
+
+### `server/api/avaliacoes-rocam/index.get.ts`
+`GET /api/avaliacoes-rocam` — requer Bearer token (qualquer role)
+- `isRocam` (cargo=rocam): filtra por `avaliadoId = payload.id`; resposta omite campos avaliador
+- `!isP1`: filtra por `avaliadorId = payload.id`
+- `isP1/admin`: sem filtro de pessoa + filtros extras via query: `nota_min`, `nota_max`, `avaliadorId`, `avaliadoId`, `dataInicio`, `dataFim`
+Paginação: 20 por página. Retorna: `{ avaliacoes, total, page, pages }`.
+
+### `server/api/avaliacoes-rocam/index.post.ts`
+`POST /api/avaliacoes-rocam` — requer Bearer token
+Bloqueado para `cargo === 'rocam'` (403).
+Body: `{ avaliadoId, avaliacao, pontoAtencao?, nota }`
+Valida: avaliadoId e avaliacao obrigatórios; nota 0-10 (Math.round).
+Busca avaliador por `payload.id` no DB (JWT não tem nome). Valida avaliado: `User.findOne({ _id: avaliadoId, active: true, cargo: 'rocam' })`.
+Retorna: `{ avaliacao }`.
+
+### `server/api/avaliacoes-rocam/membros.get.ts`
+`GET /api/avaliacoes-rocam/membros` — requer Bearer token (qualquer role)
+Retorna:
+- `membros`: `User.find({ active: true, cargo: 'rocam' })` — para todos autenticados
+- `avaliadores`: `User.find({ active: true, cargo: { $ne: 'rocam' }, role: { $ne: 'admin' } })` — só para p1/admin
 
 ---
 

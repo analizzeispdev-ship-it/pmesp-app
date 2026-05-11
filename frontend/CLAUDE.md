@@ -44,7 +44,8 @@ src/
 │   │   ├── AdvertenciaModal.vue   → modal overlay; textarea motivo + contador PAD; emite `confirm(descricao)`
 │   │   ├── ExonerarModal.vue      → modal overlay de confirmação destrutiva; emite `confirm`
 │   │   ├── EditarCargoModal.vue   → modal overlay; select de novo cargo com descrição; emite `confirm(novoCargo)`
-│   │   └── CriarAvaliacaoModal.vue → modal overlay; select estagiário, slider nota 0-10 com feedback visual colorido, textarea avaliação (required) e pontoAtencao (optional); emite `confirm(payload)`
+│   │   ├── CriarAvaliacaoModal.vue → modal overlay; select estagiário, slider nota 0-10 com feedback visual colorido, textarea avaliação (required) e pontoAtencao (optional); emite `confirm(payload)`
+│   │   └── CriarAvaliacaoRocamModal.vue → modal overlay; select policial ROCAM (prop membros[]), slider nota 0-10 com feedback visual colorido, textarea avaliação (required) e pontoAtencao (optional); emite `confirm({ avaliadoId, avaliacao, pontoAtencao, nota })`
 │   ├── viaturas/
 │   │   ├── ViaturaDropdown.vue     → item colapsável; props: viatura, showEncerrar, showEdit, actionLoading; emits: encerrar(id), edit-crew(viatura)
 │   │   ├── AbrirViaturaModal.vue   → modal form: prefixo (select com prefixos da frota; aviso se nenhum disponível), observação, 5 selects de cargo; prop prefixos (Array — prefixos disponíveis da frota); emite confirm(payload)
@@ -101,7 +102,8 @@ src/
     ├── FrotaView.vue
     ├── FardamentosView.vue
     ├── AusenciasView.vue
-    └── AvaliacaoEstagioView.vue
+    ├── AvaliacaoEstagioView.vue
+    └── AvaliacaoRocamView.vue
 ```
 
 ---
@@ -217,6 +219,7 @@ Histórico: `createWebHistory()`.
 | `/ausencias` | `Ausencias` | `AusenciasView` | `requiresAuth: true` |
 | `/registro-atividade` | `RegistroAtividade` | `AtividadeView` | `requiresAuth: true, requiresCargo: 'p1'` |
 | `/avaliacoes-estagio` | `AvaliacoesEstagio` | `AvaliacaoEstagioView` | `requiresAuth: true` |
+| `/avaliacoes-rocam` | `AvaliacoesRocam` | `AvaliacaoRocamView` | `requiresAuth: true` |
 | `/configuracoes` | `Configuracoes` | `ConfiguracoesView` | `requiresAuth: true, requiresAdmin: true` |
 
 **Guard `beforeEach`:**
@@ -308,6 +311,14 @@ Store Pinia `avaliacaoEstagio`. Gerencia avaliações de estágio com paginaçã
 - `fetchAvaliacoes(params)` → `GET /api/avaliacoes-estagio` (params: page, dataInicio, dataFim, nota_min, nota_max, avaliadorId, estagiarioId)
 - `fetchMembros()` → `GET /api/avaliacoes-estagio/membros` → popula estagiarios + avaliadores (avaliadores só p1/admin)
 - `criar(payload)` → `POST /api/avaliacoes-estagio`
+
+### `src/stores/avaliacaoRocam.js`
+Store Pinia `avaliacaoRocam`. Gerencia avaliações ROCAM com paginação (20 por página).
+**State:** `avaliacoes[]`, `total`, `page`, `pages`, `loading`, `error`, `actionLoading`, `actionError`, `membros[]`, `avaliadores[]`, `membrosLoading`
+**Actions:**
+- `fetchAvaliacoes(params)` → `GET /api/avaliacoes-rocam` (params: page, dataInicio, dataFim, nota_min, nota_max, avaliadorId, avaliadoId)
+- `fetchMembros()` → `GET /api/avaliacoes-rocam/membros` → popula membros (policiais ROCAM) + avaliadores (só p1/admin)
+- `criar(payload)` → `POST /api/avaliacoes-rocam` com `{ avaliadoId, avaliacao, pontoAtencao, nota }`
 
 ### `src/stores/gestao.js`
 Store Pinia `gestao`. Gerencia criação de usuários via `POST /api/users`.
