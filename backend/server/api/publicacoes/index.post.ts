@@ -38,7 +38,7 @@ export default defineEventHandler(async (event) => {
   }
 
   if (tipo === 'boletim') {
-    if (!isAdmin && payload.cargo !== 'p1') {
+    if (!isAdmin && !payload.cargo.includes('p1')) {
       throw createError({ statusCode: 403, message: 'Apenas P1 pode emitir boletins internos' })
     }
   }

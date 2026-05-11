@@ -18,7 +18,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 401, message: 'Token inválido ou expirado' })
   }
 
-  if (payload.role !== 'admin' && payload.cargo !== 'p1') {
+  if (payload.role !== 'admin' && !payload.cargo.includes('p1')) {
     throw createError({ statusCode: 403, message: 'Acesso negado' })
   }
 
@@ -40,7 +40,7 @@ export default defineEventHandler(async (event) => {
     name: name.trim(),
     rg: rg?.trim() || '',
     role: role || 'officer',
-    cargo: cargo || 'padrao',
+    cargo: cargo ? (Array.isArray(cargo) ? cargo : [cargo]) : ['padrao'],
     graduacao: graduacao || 'pm',
     dataPromocao: dataPromocao || null,
     badge: badge?.trim() || '',

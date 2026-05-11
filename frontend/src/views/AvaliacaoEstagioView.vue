@@ -185,7 +185,10 @@ const route = useRoute()
 const router = useRouter()
 const { currentTime, currentDate } = useClock()
 
-const isEstagio = computed(() => auth.user?.cargo === 'estagio')
+const ACTIVE_CARGOS = ['padrao', 'p1', 'p3', 'p5']
+const isEstagio = computed(() =>
+  auth.user?.cargo?.includes('estagio') && !auth.user?.cargo?.some(c => ACTIVE_CARGOS.includes(c))
+)
 const isP1 = computed(() => auth.isRh)
 
 const modalCriar = ref(false)

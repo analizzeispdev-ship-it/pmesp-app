@@ -40,9 +40,14 @@
         </td>
 
         <td>
-          <span class="cargo-badge" :class="`cargo-${officer.cargo}`">
-            {{ getCargoLabel(officer.cargo) }}
-          </span>
+          <div class="cargo-badges">
+            <span
+              v-for="c in officer.cargo"
+              :key="c"
+              class="cargo-badge"
+              :class="`cargo-${c}`"
+            >{{ getCargoLabel(c) }}</span>
+          </div>
         </td>
 
         <td class="col-center">
@@ -161,6 +166,8 @@ function dotClass(i, count) {
 .grad-cell { display: flex; align-items: center; gap: 0.35rem; white-space: nowrap; }
 .grad-prefix { font-size: var(--fs-md); line-height: 1; }
 .grad-label { font-size: var(--fs-sm); color: var(--text); }
+
+.cargo-badges { display: flex; gap: 0.3rem; flex-wrap: wrap; }
 
 .cargo-badge {
   font-size: var(--fs-xs);

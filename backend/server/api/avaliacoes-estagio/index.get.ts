@@ -24,8 +24,10 @@ export default defineEventHandler(async (event) => {
   const page = Math.max(1, Number(q.page) || 1)
   const skip = (page - 1) * PAGE_SIZE
 
-  const isEstagio = payload.cargo === 'estagio'
-  const isP1 = payload.cargo === 'p1' || payload.role === 'admin'
+  const ACTIVE_CARGOS = ['padrao', 'p1', 'p3', 'p5']
+  const isP1 = payload.cargo.includes('p1') || payload.role === 'admin'
+  const isActiveOfficer = payload.cargo.some((c: string) => ACTIVE_CARGOS.includes(c)) || payload.role === 'admin'
+  const isEstagio = payload.cargo.includes('estagio') && !isActiveOfficer
 
   const filter: Record<string, any> = {}
 

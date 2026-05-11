@@ -18,7 +18,7 @@ export default defineEventHandler(async (event) => {
 
   await connectDB()
 
-  const isP1 = payload.cargo === 'p1' || payload.role === 'admin'
+  const isP1 = payload.cargo.includes('p1') || payload.role === 'admin'
 
   const estagiarios = await User.find({ active: true, cargo: 'estagio' })
     .select('_id name rg')
@@ -27,7 +27,7 @@ export default defineEventHandler(async (event) => {
 
   let avaliadores: any[] = []
   if (isP1) {
-    avaliadores = await User.find({ active: true, cargo: { $ne: 'estagio' }, role: { $ne: 'admin' } })
+    avaliadores = await User.find({ active: true, cargo: { $in: ['padrao', 'p1', 'p3', 'p5'] }, role: { $ne: 'admin' } })
       .select('_id name rg')
       .sort({ name: 1 })
       .lean()

@@ -2,7 +2,7 @@
   <div v-if="open" class="modal-overlay" @click.self="$emit('close')">
     <div class="modal">
       <div class="modal-header">
-        <h3 class="modal-title">Editar Cargo</h3>
+        <h3 class="modal-title">Editar Cargos</h3>
         <button class="modal-close" @click="$emit('close')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
@@ -16,36 +16,28 @@
           <span class="officer-rg">RG {{ officer?.rg }}</span>
         </div>
 
-        <div class="cargo-change">
-          <div class="cargo-item current">
-            <span class="cargo-item-label">Cargo atual</span>
-            <span class="cargo-item-value">{{ currentLabel }}</span>
-          </div>
-          <svg class="cargo-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
-          </svg>
-          <div class="cargo-item new">
-            <span class="cargo-item-label">Novo cargo</span>
-            <span class="cargo-item-value" :class="{ placeholder: !novoCargo }">
-              {{ novoLabel || 'Selecione...' }}
-            </span>
-          </div>
-        </div>
-
         <div class="field">
-          <label class="field-label">Selecionar novo cargo</label>
-          <select v-model="novoCargo" class="field-input">
-            <option value="" disabled>Escolha o cargo</option>
-            <option
+          <label class="field-label">Cargos ativos <span class="req">*</span></label>
+          <p class="field-hint">Selecione um ou mais cargos. Ao menos um obrigatório.</p>
+          <div class="cargo-list">
+            <label
               v-for="c in CARGOS"
               :key="c.value"
-              :value="c.value"
-              :disabled="c.value === officer?.cargo"
+              class="cargo-option"
+              :class="{ selected: selected.includes(c.value) }"
             >
-              {{ c.label }}
-            </option>
-          </select>
-          <span v-if="novoCargoDesc" class="field-hint">{{ novoCargoDesc }}</span>
+              <input
+                type="checkbox"
+                :value="c.value"
+                v-model="selected"
+                class="cargo-checkbox"
+              />
+              <div class="cargo-option-body">
+                <span class="cargo-option-label">{{ c.label }}</span>
+                <span class="cargo-option-desc">{{ c.description }}</span>
+              </div>
+            </label>
+          </div>
         </div>
       </div>
 
@@ -53,7 +45,7 @@
         <button class="btn-ghost" @click="$emit('close')">Cancelar</button>
         <button
           class="btn-primary"
-          :disabled="!novoCargo || novoCargo === officer?.cargo || loading"
+          :disabled="selected.length === 0 || loading"
           @click="confirm"
         >
           <span v-if="loading" class="btn-spinner" />
@@ -65,7 +57,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, watch } from 'vue'
 import { CARGOS } from '@/constants/graduacoes'
 
 const props = defineProps({
@@ -76,17 +68,18 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'confirm'])
 
-const novoCargo = ref('')
+const selected = ref([])
 
-watch(() => props.open, (val) => { if (val) novoCargo.value = '' })
-
-const currentLabel = computed(() => CARGOS.find((c) => c.value === props.officer?.cargo)?.label ?? '—')
-const novoLabel = computed(() => CARGOS.find((c) => c.value === novoCargo.value)?.label ?? '')
-const novoCargoDesc = computed(() => CARGOS.find((c) => c.value === novoCargo.value)?.description ?? '')
+watch(() => props.open, (val) => {
+  if (val) {
+    const current = props.officer?.cargo
+    selected.value = Array.isArray(current) ? [...current] : (current ? [current] : ['padrao'])
+  }
+})
 
 function confirm() {
-  if (!novoCargo.value || novoCargo.value === props.officer?.cargo) return
-  emit('confirm', novoCargo.value)
+  if (selected.value.length === 0) return
+  emit('confirm', [...selected.value])
 }
 </script>
 
@@ -107,7 +100,9 @@ function confirm() {
   border: 1px solid var(--border-soft);
   border-radius: 14px;
   width: 100%;
-  max-width: 440px;
+  max-width: 460px;
+  max-height: 90vh;
+  overflow-y: auto;
   box-shadow: var(--shadow-lg, 0 20px 60px rgb(0 0 0 / 20%));
 }
 
@@ -117,6 +112,10 @@ function confirm() {
   justify-content: space-between;
   padding: 1.25rem 1.5rem;
   border-bottom: 1px solid var(--border-soft);
+  position: sticky;
+  top: 0;
+  background: var(--surface);
+  z-index: 1;
 }
 
 .modal-title {
@@ -165,43 +164,7 @@ function confirm() {
   color: var(--text-faint);
 }
 
-.cargo-change {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.cargo-item {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-  padding: 0.65rem 0.75rem;
-  border-radius: 8px;
-  border: 1px solid var(--border-soft);
-}
-
-.cargo-item.current { background: var(--surface-subtle); }
-.cargo-item.new { background: var(--surface-brand-soft); border-color: var(--primary-light); }
-
-.cargo-item-label {
-  font-size: var(--fs-xs);
-  color: var(--text-faint);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-
-.cargo-item-value {
-  font-size: var(--fs-sm);
-  font-weight: var(--fw-semibold);
-  color: var(--text-strong);
-}
-
-.cargo-item-value.placeholder { color: var(--text-faint); font-weight: var(--fw-normal); }
-
-.cargo-arrow { width: 18px; height: 18px; color: var(--text-muted); flex-shrink: 0; }
-
-.field { display: flex; flex-direction: column; gap: 0.35rem; }
+.field { display: flex; flex-direction: column; gap: 0.5rem; }
 
 .field-label {
   font-size: var(--fs-sm);
@@ -209,23 +172,56 @@ function confirm() {
   color: var(--text-strong);
 }
 
-.field-input {
-  border: 1px solid var(--border);
-  background: var(--surface-soft);
-  color: var(--text);
-  font-size: var(--fs-md);
-  padding: 0.55rem 0.8rem;
-  border-radius: 8px;
-  outline: none;
-  font-family: inherit;
-}
-
-.field-input:focus {
-  border-color: var(--primary-light);
-  box-shadow: 0 0 0 3px rgb(42 82 152 / 10%);
-}
+.req { color: var(--error); }
 
 .field-hint {
+  font-size: var(--fs-xs);
+  color: var(--text-faint);
+  margin-top: -0.25rem;
+}
+
+.cargo-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.cargo-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border-soft);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.cargo-option:hover { background: var(--surface-subtle); }
+.cargo-option.selected { background: var(--surface-brand-soft); border-color: var(--primary-light); }
+
+.cargo-checkbox {
+  margin-top: 2px;
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--primary);
+  flex-shrink: 0;
+}
+
+.cargo-option-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cargo-option-label {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--text-strong);
+}
+
+.cargo-option-desc {
   font-size: var(--fs-xs);
   color: var(--text-faint);
 }
@@ -236,6 +232,9 @@ function confirm() {
   gap: 0.75rem;
   padding: 1.25rem 1.5rem;
   border-top: 1px solid var(--border-soft);
+  position: sticky;
+  bottom: 0;
+  background: var(--surface);
 }
 
 .btn-ghost {

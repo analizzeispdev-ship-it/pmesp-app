@@ -11,7 +11,7 @@ export default defineEventHandler(async (event) => {
   const ausencia = await Ausencia.findById(id)
   if (!ausencia) throw createError({ statusCode: 404, message: 'Ausência não encontrada' })
 
-  const isP1OrAdmin = payload.cargo === 'p1' || payload.role === 'admin'
+  const isP1OrAdmin = payload.cargo.includes('p1') || payload.role === 'admin'
   if (ausencia.usuarioId.toString() !== payload.id && !isP1OrAdmin) {
     throw createError({ statusCode: 403, message: 'Acesso negado' })
   }

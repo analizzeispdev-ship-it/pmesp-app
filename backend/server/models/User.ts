@@ -14,7 +14,7 @@ export interface IUser extends Document {
   name: string
   rg: string
   role: 'admin' | 'supervisor' | 'officer'
-  cargo: 'padrao' | 'p1' | 'p3' | 'p5' | 'estagio'
+  cargo: string[]
   graduacao: string
   dataPromocao: Date | null
   cursos: mongoose.Types.ObjectId[]
@@ -44,7 +44,7 @@ const UserSchema = new Schema<IUser>(
     name: { type: String, required: true },
     rg: { type: String, default: '' },
     role: { type: String, enum: ['admin', 'supervisor', 'officer'], default: 'officer' },
-    cargo: { type: String, enum: CARGO_VALUES, default: 'padrao' },
+    cargo: { type: [String], enum: CARGO_VALUES, default: ['padrao'], validate: { validator: (v: string[]) => v.length > 0, message: 'Cargo não pode ser vazio' } },
     graduacao: { type: String, enum: GRADUACAO_VALUES, default: '14' },
     dataPromocao: { type: Date, default: null },
     cursos: [{ type: Schema.Types.ObjectId, ref: 'Course' }],

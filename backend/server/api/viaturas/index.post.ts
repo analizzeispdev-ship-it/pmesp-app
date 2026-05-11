@@ -19,7 +19,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 401, message: 'Token inválido ou expirado' })
   }
 
-  if (payload.cargo !== 'p1' && payload.role !== 'admin') {
+  if (!payload.cargo.includes('p1') && payload.role !== 'admin') {
     throw createError({ statusCode: 403, message: 'Acesso negado' })
   }
 

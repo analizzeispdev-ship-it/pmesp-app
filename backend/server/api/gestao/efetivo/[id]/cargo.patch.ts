@@ -17,7 +17,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 401, message: 'Token inválido ou expirado' })
   }
 
-  if (payload.cargo !== 'p1' && payload.role !== 'admin') {
+  if (!payload.cargo.includes('p1') && payload.role !== 'admin') {
     throw createError({ statusCode: 403, message: 'Acesso negado' })
   }
 
@@ -25,7 +25,8 @@ export default defineEventHandler(async (event) => {
   const body = await readBody(event)
   const { cargo } = body ?? {}
 
-  if (!cargo || !CARGO_VALUES.includes(cargo)) {
+  const cargos: string[] = Array.isArray(cargo) ? cargo : (cargo ? [cargo] : [])
+  if (cargos.length === 0 || !cargos.every((c: string) => CARGO_VALUES.includes(c))) {
     throw createError({ statusCode: 400, message: 'Cargo inválido' })
   }
 
@@ -33,7 +34,7 @@ export default defineEventHandler(async (event) => {
 
   const user = await User.findOneAndUpdate(
     { _id: id, active: true, role: { $ne: 'admin' } },
-    { cargo },
+    { cargo: cargos },
     { new: true }
   ).select('-password -__v').lean()
 

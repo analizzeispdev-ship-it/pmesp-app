@@ -37,9 +37,14 @@
         </td>
 
         <td>
-          <span class="cargo-badge" :class="`cargo-${officer.cargo}`">
-            {{ getCargoLabel(officer.cargo) }}
-          </span>
+          <div class="cargo-badges">
+            <span
+              v-for="c in (Array.isArray(officer.cargo) ? officer.cargo : [officer.cargo])"
+              :key="c"
+              class="cargo-badge"
+              :class="`cargo-${c}`"
+            >{{ getCargoLabel(c) }}</span>
+          </div>
         </td>
 
         <td>
@@ -122,6 +127,8 @@ function formatDate(dateStr) {
 
 .officer-username { font-size: var(--fs-xs); color: var(--text-faint); }
 
+.cargo-badges { display: flex; gap: 0.3rem; flex-wrap: wrap; }
+
 .cargo-badge {
   font-size: var(--fs-xs);
   font-weight: var(--fw-semibold);
@@ -137,6 +144,7 @@ function formatDate(dateStr) {
 .cargo-badge.cargo-p3 { background: var(--warning-soft); color: var(--warning); border-color: var(--accent-light); }
 .cargo-badge.cargo-p5 { background: var(--success-bg); color: var(--success); border-color: #bbf7d0; }
 .cargo-badge.cargo-estagio { background: var(--danger-soft); color: var(--error); border-color: var(--error); }
+.cargo-badge.cargo-rocam { background: var(--surface-subtle); color: var(--accent); border-color: var(--accent-light); }
 
 .grad-cell { display: flex; align-items: center; gap: 0.4rem; }
 .grad-prefix { font-size: var(--fs-md); line-height: 1; }

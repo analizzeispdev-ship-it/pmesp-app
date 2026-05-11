@@ -24,7 +24,7 @@ function countWeekdays(from: Date, to: Date): number {
 
 export default defineEventHandler(async (event) => {
   const payload = requireAuth(event)
-  if (payload.cargo !== 'p1' && payload.role !== 'admin') {
+  if (!payload.cargo.includes('p1') && payload.role !== 'admin') {
     throw createError({ statusCode: 403, message: 'Acesso negado' })
   }
   await connectDB()

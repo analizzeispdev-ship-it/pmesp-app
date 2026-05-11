@@ -4,7 +4,7 @@ export interface JwtPayload {
   id: string
   username: string
   role: string
-  cargo: string
+  cargo: string[]
   graduacao: string
 }
 

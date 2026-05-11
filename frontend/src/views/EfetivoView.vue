@@ -159,7 +159,7 @@ const filteredOfficers = computed(() => {
     const matchSearch =
       !q || o.name.toLowerCase().includes(q) || (o.rg || '').toLowerCase().includes(q)
 
-    const matchCargo = !filterCargo.value || o.cargo === filterCargo.value
+    const matchCargo = !filterCargo.value || (Array.isArray(o.cargo) ? o.cargo.includes(filterCargo.value) : o.cargo === filterCargo.value)
 
     const matchStatus =
       !filterStatus.value ||

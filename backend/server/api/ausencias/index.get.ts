@@ -7,7 +7,7 @@ export default defineEventHandler(async (event) => {
   await connectDB()
 
   const { usuarioId, dataInicio, dataFim } = getQuery(event)
-  const isP1OrAdmin = payload.cargo === 'p1' || payload.role === 'admin'
+  const isP1OrAdmin = payload.cargo.includes('p1') || payload.role === 'admin'
 
   const filter: Record<string, unknown> = {}
 

@@ -19,7 +19,7 @@ export const useAuthStore = defineStore('auth', {
   getters: {
     isAuthenticated: (state) => !!state.token,
     isAdmin: (state) => state.user?.role === 'admin',
-    isRh: (state) => state.user?.cargo === 'p1' || state.user?.role === 'admin',
+    isRh: (state) => state.user?.cargo?.includes('p1') || state.user?.role === 'admin',
     needsPasswordChange: (state) => !!state.user?.firstAccess,
 
     displayName: (state) => {
@@ -40,16 +40,16 @@ export const useAuthStore = defineStore('auth', {
 
     canPostBoletim: (state) => {
       if (!state.user) return false
-      return state.user.cargo === 'p1' || state.user.role === 'admin'
+      return state.user.cargo?.includes('p1') || state.user.role === 'admin'
     },
 
     canEmitir: (state) => {
       if (!state.user) return false
       if (state.user.role === 'admin') return true
-      return parseInt(state.user.graduacao) <= 7 || state.user.cargo === 'p1'
+      return parseInt(state.user.graduacao) <= 7 || state.user.cargo?.includes('p1')
     },
 
-    isP3: (state) => state.user?.cargo === 'p3' || state.user?.role === 'admin',
+    isP3: (state) => state.user?.cargo?.includes('p3') || state.user?.role === 'admin',
   },
 
   actions: {

@@ -130,13 +130,13 @@ router.beforeEach((to) => {
     return '/'
   }
 
-  if (to.meta.requiresCargo && auth.user?.cargo !== to.meta.requiresCargo && auth.user?.role !== 'admin') {
+  if (to.meta.requiresCargo && !auth.user?.cargo?.includes(to.meta.requiresCargo) && auth.user?.role !== 'admin') {
     return '/'
   }
 
   if (to.meta.requiresEmitir) {
     const grad = parseInt(auth.user?.graduacao)
-    const canEmitir = auth.user?.role === 'admin' || auth.user?.cargo === 'p1' || (!isNaN(grad) && grad <= 7)
+    const canEmitir = auth.user?.role === 'admin' || auth.user?.cargo?.includes('p1') || (!isNaN(grad) && grad <= 7)
     if (!canEmitir) return '/'
   }
 
