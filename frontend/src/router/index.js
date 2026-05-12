@@ -54,7 +54,7 @@ const routes = [
     path: '/viaturas',
     name: 'RegistroTurno',
     component: () => import('@/views/ViaturaView.vue'),
-    meta: { requiresAuth: true, requiresCargo: 'p1' },
+    meta: { requiresAuth: true },
   },
   {
     path: '/apreensoes',
