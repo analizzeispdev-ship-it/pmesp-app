@@ -61,7 +61,7 @@ src/
 │   │   ├── AdicionarApreensaoModal.vue → modal form: viatura (apenas a do user), origem, grid de 7 inputs numéricos; valida ≥1 item; emite confirm(payload)
 │   │   └── RelatorioViaturasModal.vue  → modal lista last 15 viaturas com dropdown de apreensoes; apenas P3/admin abre
 │   ├── frota/
-│   │   ├── VeiculoCard.vue             → card horizontal por veículo; foto/placeholder, modelo, ano, prefixos badges; editar/remover com confirm inline de 2 etapas
+│   │   ├── VeiculoCard.vue             → card horizontal por veículo; foto/placeholder, modelo, ano, prefixos badges; ações editar/remover (confirm inline 2 etapas) visíveis apenas se isP3
 │   │   └── CadastrarVeiculoModal.vue   → modal create/edit: upload foto (base64, max 2MB), modelo, ano, lista dinâmica de prefixos com add/remove
 │   ├── ausencias/
 │   │   ├── SolicitarAusenciaModal.vue  → modal create: datepicker (input type=date, min=hoje, PT-BR) + textarea motivo; emite confirm({data, motivo})
@@ -214,7 +214,7 @@ Histórico: `createWebHistory()`.
 | `/gestao/efetivo` | `GestaoEfetivo` | `GestaoEfetivoView` | `requiresAuth: true, requiresCargo: 'p1'` |
 | `/viaturas` | `Viaturas` | `ViaturaView` | `requiresAuth: true, requiresCargo: 'p1'` |
 | `/apreensoes` | `Apreensoes` | `ApreensaoView` | `requiresAuth: true` |
-| `/gestao/frota` | `FrotaViaturas` | `FrotaView` | `requiresAuth: true, requiresCargo: 'p3'` |
+| `/gestao/frota` | `FrotaViaturas` | `FrotaView` | `requiresAuth: true` |
 | `/fardamentos` | `Fardamentos` | `FardamentosView` | `requiresAuth: true` |
 | `/ausencias` | `Ausencias` | `AusenciasView` | `requiresAuth: true` |
 | `/registro-atividade` | `RegistroAtividade` | `AtividadeView` | `requiresAuth: true, requiresCargo: 'p1'` |
@@ -279,8 +279,7 @@ Flag de dias patrulhados vem de `atividadeStore.minhaAtividade` (fetched via `fe
 Sidebar institucional fixa do dashboard.
 - Recebe `currentPath`, `isAdmin`, `isRh`, `isP3` (Boolean, default false), `initials`, `userName`, `userRank`.
 - Seção "Gestão de Pessoal" visível apenas quando `isRh = true` (cargo p1 ou admin).
-- Link "Fardamentos" em Operacional: visível para todos autenticados (sem `v-if`), rota `/fardamentos`.
-- Seção "Gestão Operacional" visível quando `isP3 = true` (cargo p3 ou admin). Contém link para Frota de Viaturas.
+- Seção "Gestão Operacional" visível para TODOS autenticados. Contém links para Frota de Viaturas e Fardamentos.
 - Emite `logout`.
 - Exibe branding PMESP, grupos de navegação, itens desabilitados "Em breve" e rodapé do usuário.
 - Cores e tipografia aplicadas por variáveis CSS globais (tokens), sem valores fixos de tema.
@@ -396,9 +395,9 @@ Layout: AppSidebar + AppTopbar. Conteúdo:
 - Usa `useApreensaoStore` + `useViaturasStore`
 
 ### `src/views/FrotaView.vue`
-Rota `/gestao/frota` — acesso exclusivo p3 + admin.
-Layout: AppSidebar + AppTopbar. Page card com botão "Cadastrar Veículo".
-Lista `VeiculoCard` com callbacks `@editar → CadastrarVeiculoModal` e `@remover → frota.remover`.
+Rota `/gestao/frota` — acesso para todos autenticados. Botão "Cadastrar Veículo" visível apenas para `isP3`.
+Layout: AppSidebar + AppTopbar. Page card.
+Lista `VeiculoCard` com `:is-p3="auth.isP3"` e callbacks `@editar → CadastrarVeiculoModal` e `@remover → frota.remover`.
 Usa `useFrotaStore`.
 `onMounted`: chama `frota.fetchVeiculos()`.
 
@@ -411,12 +410,12 @@ Emits: `@editar → CadastrarFardamentoModal`, `@remover → store.remover`, `@m
 `onMounted`: chama `store.fetchAll()`.
 
 ### `src/views/ViaturaView.vue`
-Rota `/viaturas` — acesso P1 + admin. Gerencia viaturas abertas.
+Rota `/viaturas` — acesso para todos autenticados. Gerencia viaturas abertas.
 Layout: AppSidebar + AppTopbar. Page card com botão "Abrir Viatura" no header.
 Lista `ViaturaDropdown` com `showEncerrar=true` e `@encerrar → EncerrarViaturaModal`.
-Usa `useViaturasStore` + `useGestaoEfetivoStore` (para officers do AbrirViaturaModal) + `useFrotaStore`.
-`onMounted`: chama `store.fetchAtivas()` e `gestaoEfetivo.fetchAtivos()` se vazio.
-Watch no `modalAbrir` também chama `frota.fetchPrefixosDisponiveis()` ao abrir o modal.
+Usa `useViaturasStore` + `useEfetivoStore` (para officers do AbrirViaturaModal — usa GET /api/efetivo acessível a todos) + `useFrotaStore`.
+`onMounted`: chama `store.fetchAtivas()` e `efetivo.fetchAll()` se vazio.
+Watch no `modalAbrir` também chama `efetivo.fetchAll()` e `frota.fetchPrefixosDisponiveis()` ao abrir o modal.
 Passa `:prefixos="frota.prefixosDisponiveis"` ao `AbrirViaturaModal`.
 
 ### `src/views/GestaoUsuariosView.vue`

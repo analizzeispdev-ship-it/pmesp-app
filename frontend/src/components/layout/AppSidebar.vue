@@ -116,36 +116,34 @@
         <span class="badge-soon">Em breve</span>
       </a>
 
-      <template v-if="isP3">
-        <div class="nav-section">Gestão Operacional</div>
+      <div class="nav-section">Gestão Operacional</div>
 
-        <RouterLink
-          to="/gestao/frota"
-          class="nav-item"
-          :class="{ active: currentPath === '/gestao/frota' }"
-          @click="isOpen = false"
-        >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="1" y="3" width="15" height="13" rx="2" />
-            <path d="M16 8h4l3 3v5h-7V8z" />
-            <circle cx="5.5" cy="18.5" r="2.5" />
-            <circle cx="18.5" cy="18.5" r="2.5" />
-          </svg>
-          <span>Frota de Viaturas</span>
-        </RouterLink>
+      <RouterLink
+        to="/gestao/frota"
+        class="nav-item"
+        :class="{ active: currentPath === '/gestao/frota' }"
+        @click="isOpen = false"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="1" y="3" width="15" height="13" rx="2" />
+          <path d="M16 8h4l3 3v5h-7V8z" />
+          <circle cx="5.5" cy="18.5" r="2.5" />
+          <circle cx="18.5" cy="18.5" r="2.5" />
+        </svg>
+        <span>Frota de Viaturas</span>
+      </RouterLink>
 
-        <RouterLink
-          to="/fardamentos"
-          class="nav-item"
-          :class="{ active: currentPath === '/fardamentos' }"
-          @click="isOpen = false"
-        >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M20.38 3.46L16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.57a1 1 0 0 0 .99.84H6v10a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.57a2 2 0 0 0-1.34-2.23z" />
-          </svg>
-          <span>Fardamentos</span>
-        </RouterLink>
-      </template>
+      <RouterLink
+        to="/fardamentos"
+        class="nav-item"
+        :class="{ active: currentPath === '/fardamentos' }"
+        @click="isOpen = false"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20.38 3.46L16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.57a1 1 0 0 0 .99.84H6v10a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.57a2 2 0 0 0-1.34-2.23z" />
+        </svg>
+        <span>Fardamentos</span>
+      </RouterLink>
 
       <div class="nav-section">Gestão de Pessoal</div>
 

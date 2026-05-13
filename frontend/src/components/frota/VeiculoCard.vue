@@ -21,7 +21,7 @@
       </div>
     </div>
 
-    <div class="veiculo-actions">
+    <div v-if="isP3" class="veiculo-actions">
       <button class="btn-action btn-edit" :disabled="actionLoading" @click="$emit('editar', veiculo)">
         Editar
       </button>
@@ -49,6 +49,7 @@ import { ref } from 'vue'
 const props = defineProps({
   veiculo: { type: Object, required: true },
   actionLoading: { type: Boolean, default: false },
+  isP3: { type: Boolean, default: false },
 })
 
 const emit = defineEmits(['editar', 'remover'])

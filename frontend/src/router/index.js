@@ -66,7 +66,7 @@ const routes = [
     path: '/gestao/frota',
     name: 'FrotaViaturas',
     component: () => import('@/views/FrotaView.vue'),
-    meta: { requiresAuth: true, requiresCargo: 'p3' },
+    meta: { requiresAuth: true },
   },
   {
     path: '/fardamentos',

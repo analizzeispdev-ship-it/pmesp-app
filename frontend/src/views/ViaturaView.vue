@@ -75,7 +75,7 @@
   <AbrirViaturaModal
     :open="modalAbrir"
     :loading="store.actionLoading"
-    :officers="gestaoEfetivo.ativos"
+    :officers="efetivo.officers"
     :prefixos="frota.prefixosDisponiveis"
     :error="store.actionError || ''"
     @close="modalAbrir = false"
@@ -94,7 +94,7 @@
     :open="!!selectedViaturaEditar"
     :viatura="selectedViaturaEditar"
     :loading="store.actionLoading"
-    :officers="gestaoEfetivo.ativos"
+    :officers="efetivo.officers"
     :error="store.actionError || ''"
     @close="selectedViaturaEditar = null"
     @confirm="onEditarTripulacao"
@@ -106,7 +106,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useViaturasStore } from '@/stores/viaturas'
-import { useGestaoEfetivoStore } from '@/stores/gestaoEfetivo'
+import { useEfetivoStore } from '@/stores/efetivo'
 import { useFrotaStore } from '@/stores/frota'
 import { useToastStore } from '@/stores/toast'
 import { useClock } from '@/composables/useClock'
@@ -119,7 +119,7 @@ import EditarTripulacaoModal from '@/components/viaturas/EditarTripulacaoModal.v
 
 const auth = useAuthStore()
 const store = useViaturasStore()
-const gestaoEfetivo = useGestaoEfetivoStore()
+const efetivo = useEfetivoStore()
 const frota = useFrotaStore()
 const toast = useToastStore()
 const route = useRoute()
@@ -136,7 +136,7 @@ watch(() => store.actionError, (err) => {
 
 watch(modalAbrir, (val) => {
   if (val) {
-    gestaoEfetivo.fetchAtivos()
+    efetivo.fetchAll()
     frota.fetchPrefixosDisponiveis()
   }
 })
@@ -153,7 +153,7 @@ const roleLabel = computed(() => {
 
 onMounted(() => {
   store.fetchAtivas()
-  if (gestaoEfetivo.ativos.length === 0) gestaoEfetivo.fetchAtivos()
+  if (efetivo.officers.length === 0) efetivo.fetchAll()
 })
 
 function userInCrew(v) {
