@@ -19,10 +19,6 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 401, message: 'Token inválido ou expirado' })
   }
 
-  if (!payload.cargo.includes('p1') && payload.role !== 'admin') {
-    throw createError({ statusCode: 403, message: 'Acesso negado' })
-  }
-
   await connectDB()
 
   const body = await readBody(event)

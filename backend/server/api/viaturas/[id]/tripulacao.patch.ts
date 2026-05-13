@@ -31,11 +31,6 @@ export default defineEventHandler(async (event) => {
     .map((k) => viatura[k]?.toString())
     .filter(Boolean) as string[]
 
-  const isInCrew = currentCrewIds.includes(payload.id)
-  if (!isInCrew && payload.role !== 'admin') {
-    throw createError({ statusCode: 403, message: 'Apenas tripulantes da viatura podem editá-la' })
-  }
-
   const body = await readBody(event)
   const { motorista, chefeDeBarca, auxiliar1, auxiliar2, auxiliar3 } = body ?? {}
 

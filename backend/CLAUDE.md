@@ -268,14 +268,14 @@ Retorna: `{ viaturas: [...] }` — apenas `status: 'ativa'`, ordenadas por `aber
 Popula motorista, chefeDeBarca, auxiliar1–3 com `name rg graduacao cargo username`.
 
 ### `server/api/viaturas/index.post.ts`
-`POST /api/viaturas` — requer Bearer + cargo p1 ou admin
+`POST /api/viaturas` — requer Bearer token (qualquer role)
 Body: `{ prefixo, observacao?, motorista, chefeDeBarca, auxiliar1?, auxiliar2?, auxiliar3? }`
 Valida: prefixo obrigatório, motorista/chefeDeBarca obrigatórios, sem IDs duplicados na barca.
 Ao criar: `User.updateMany({ _id: { $in: ids } }, { patrulhando: true, ultimaPatrulha: now })`.
 Retorna `{ viatura }` populada.
 
 ### `server/api/viaturas/[id]/tripulacao.patch.ts`
-`PATCH /api/viaturas/:id/tripulacao` — requer estar na tripulação ou admin
+`PATCH /api/viaturas/:id/tripulacao` — requer Bearer token (qualquer role)
 Body: `{ motorista, chefeDeBarca, auxiliar1?, auxiliar2?, auxiliar3? }`
 Calcula `addedIds` (novos na viatura) e `removedIds` (saíram). Verifica `addedIds` não estão patrulhando em outra viatura.
 `updateMany` removedIds → `patrulhando: false`; addedIds → `patrulhando: true, ultimaPatrulha: now`.
@@ -333,7 +333,7 @@ Valida: ao menos um item > 0. Retorna `{ apreensao }`.
 Retorna: `{ viaturas: [{ viaturaId, prefixo, status, abertaEm, encerradaEm, apreensoes[] }] }`
 
 ### `server/api/viaturas/[id]/encerrar.patch.ts`
-`PATCH /api/viaturas/:id/encerrar` — requer p1 ou admin
+`PATCH /api/viaturas/:id/encerrar` — requer Bearer token (qualquer role)
 Checa se viatura é ativa (400 se já encerrada).
 Ao encerrar: `User.updateMany(...)` seta `patrulhando: false` em todos da barca.
 Seta `status: 'encerrada'`, `encerradaPor`, `encerradaEm: now`.

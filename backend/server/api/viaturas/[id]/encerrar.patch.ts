@@ -34,11 +34,6 @@ export default defineEventHandler(async (event) => {
     viatura.auxiliar3,
   ].filter(Boolean).map((oid) => oid.toString())
 
-  const isInCrew = crewIds.includes(payload.id)
-  if (!isInCrew && payload.role !== 'admin') {
-    throw createError({ statusCode: 403, message: 'Apenas tripulantes da viatura podem encerrá-la' })
-  }
-
   await User.updateMany({ _id: { $in: crewIds } }, { patrulhando: false })
 
   const updated = await Viatura.findByIdAndUpdate(

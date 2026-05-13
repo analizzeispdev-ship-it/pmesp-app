@@ -61,7 +61,7 @@
               :key="v._id"
               :viatura="v"
               show-encerrar
-              :show-edit="canEditViatura(v)"
+              show-edit
               :action-loading="store.actionLoading"
               @encerrar="openEncerrar"
               @edit-crew="openEditar"
@@ -155,16 +155,6 @@ onMounted(() => {
   store.fetchAtivas()
   if (efetivo.officers.length === 0) efetivo.fetchAll()
 })
-
-function userInCrew(v) {
-  const uid = auth.user?.id
-  return ['motorista', 'chefeDeBarca', 'auxiliar1', 'auxiliar2', 'auxiliar3']
-    .some((k) => v[k] && (v[k]._id ?? v[k]).toString() === uid)
-}
-
-function canEditViatura(v) {
-  return auth.isAdmin || userInCrew(v)
-}
 
 function openEncerrar(viaturaId) {
   selectedViatura.value = store.ativas.find((v) => v._id === viaturaId) ?? null
