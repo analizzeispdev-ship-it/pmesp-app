@@ -192,11 +192,13 @@ const ausenciasExibidas = computed(() => {
   if (auth.isRh) {
     if (filtroUsuarioId.value) list = list.filter((a) => a.usuarioId?.toString() === filtroUsuarioId.value)
     if (filtroDataInicio.value) {
-      const ini = new Date(filtroDataInicio.value)
+      const [y, m, d] = filtroDataInicio.value.split('-').map(Number)
+      const ini = new Date(Date.UTC(y, m - 1, d, 0, 0, 0, 0))
       list = list.filter((a) => new Date(a.dataFim) >= ini)
     }
     if (filtroDataFim.value) {
-      const fim = new Date(filtroDataFim.value)
+      const [y, m, d] = filtroDataFim.value.split('-').map(Number)
+      const fim = new Date(Date.UTC(y, m - 1, d, 23, 59, 59, 999))
       list = list.filter((a) => new Date(a.dataInicio) <= fim)
     }
   }
@@ -235,7 +237,11 @@ function limparFiltros() {
 
 function formatDate(d) {
   if (!d) return '—'
-  return new Date(d).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+  const dt = new Date(d)
+  const day = String(dt.getUTCDate()).padStart(2, '0')
+  const month = String(dt.getUTCMonth() + 1).padStart(2, '0')
+  const year = dt.getUTCFullYear()
+  return `${day}/${month}/${year}`
 }
 
 function logout() {

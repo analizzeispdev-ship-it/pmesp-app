@@ -12,8 +12,11 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, message: 'Período e motivo são obrigatórios' })
   }
 
-  const inicio = new Date(body.dataInicio)
-  const fim = new Date(body.dataFim)
+  const [anoI, mesI, diaI] = (body.dataInicio as string).split('-').map(Number)
+  const [anoF, mesF, diaF] = (body.dataFim as string).split('-').map(Number)
+  // Armazena meio-dia UTC para garantir que nenhum fuso horário deslocará o dia
+  const inicio = new Date(Date.UTC(anoI, mesI - 1, diaI, 12, 0, 0, 0))
+  const fim = new Date(Date.UTC(anoF, mesF - 1, diaF, 12, 0, 0, 0))
   if (fim < inicio) {
     throw createError({ statusCode: 400, message: 'Data fim deve ser igual ou posterior à data início' })
   }

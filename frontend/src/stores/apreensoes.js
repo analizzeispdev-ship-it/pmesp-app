@@ -15,6 +15,9 @@ export const useApreensaoStore = defineStore('apreensoes', {
     actionError: null,
     relatorio: [],
     relatorioLoading: false,
+    semanalStats: null,
+    semanalLoading: false,
+    semanalError: null,
   }),
 
   actions: {
@@ -75,6 +78,22 @@ export const useApreensaoStore = defineStore('apreensoes', {
         throw e
       } finally {
         this.relatorioLoading = false
+      }
+    },
+
+    async fetchSemanal(inicio, fim) {
+      this.semanalLoading = true
+      this.semanalError = null
+      this.semanalStats = null
+      try {
+        const api = useApi()
+        const data = await api.get(`/api/apreensoes/relatorio-semanal?inicio=${inicio}&fim=${fim}`)
+        this.semanalStats = data
+      } catch (e) {
+        this.semanalError = e.message || 'Erro ao carregar relatório semanal'
+        throw e
+      } finally {
+        this.semanalLoading = false
       }
     },
   },

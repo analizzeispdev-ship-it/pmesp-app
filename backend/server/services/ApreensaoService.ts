@@ -11,9 +11,8 @@ function monthRange(mes: number, ano: number) {
 }
 
 export class ApreensaoService {
-  static async getStats(mes: number, ano: number) {
+  static async getStatsByRange(start: Date, end: Date) {
     await connectDB()
-    const { start, end } = monthRange(mes, ano)
     const match = { createdAt: { $gte: start, $lte: end } }
 
     const [totaisArr, rankRaw] = await Promise.all([
@@ -94,9 +93,13 @@ export class ApreensaoService {
     return { totais, rankGeral, rankPorItem }
   }
 
-  static async getPatrulhaRank(mes: number, ano: number) {
-    await connectDB()
+  static async getStats(mes: number, ano: number) {
     const { start, end } = monthRange(mes, ano)
+    return ApreensaoService.getStatsByRange(start, end)
+  }
+
+  static async getPatrulhaRankByRange(start: Date, end: Date) {
+    await connectDB()
     const now = new Date()
 
     const viaturas = await Viatura.find({
@@ -144,9 +147,13 @@ export class ApreensaoService {
       .slice(0, 10)
   }
 
-  static async getDiasPatrulhadosRank(mes: number, ano: number) {
-    await connectDB()
+  static async getPatrulhaRank(mes: number, ano: number) {
     const { start, end } = monthRange(mes, ano)
+    return ApreensaoService.getPatrulhaRankByRange(start, end)
+  }
+
+  static async getDiasPatrulhadosRankByRange(start: Date, end: Date) {
+    await connectDB()
     const now = new Date()
 
     const viaturas = await Viatura.find({
@@ -184,7 +191,10 @@ export class ApreensaoService {
         const endDay = new Date(vEnd)
         endDay.setHours(0, 0, 0, 0)
         while (cur <= endDay) {
-          entry.days.add(cur.toISOString().split('T')[0])
+          const y = cur.getFullYear()
+          const mo = String(cur.getMonth() + 1).padStart(2, '0')
+          const d = String(cur.getDate()).padStart(2, '0')
+          entry.days.add(`${y}-${mo}-${d}`)
           cur.setDate(cur.getDate() + 1)
         }
       }
@@ -194,6 +204,11 @@ export class ApreensaoService {
       .map(({ info, days }) => ({ ...info, total: days.size }))
       .sort((a, b) => b.total - a.total)
       .slice(0, 10)
+  }
+
+  static async getDiasPatrulhadosRank(mes: number, ano: number) {
+    const { start, end } = monthRange(mes, ano)
+    return ApreensaoService.getDiasPatrulhadosRankByRange(start, end)
   }
 
   static async create(data: {

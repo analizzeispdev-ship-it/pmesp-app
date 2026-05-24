@@ -44,6 +44,15 @@
                 </svg>
                 Relatório
               </button>
+              <button v-if="auth.isP3" class="btn-relatorio" @click="modalSemanal = true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                  <line x1="16" y1="2" x2="16" y2="6" />
+                  <line x1="8" y1="2" x2="8" y2="6" />
+                  <line x1="3" y1="10" x2="21" y2="10" />
+                </svg>
+                Relatório Semanal
+              </button>
               <button class="btn-add" @click="modalAdicionar = true">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                   <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
@@ -104,6 +113,11 @@
     :loading="store.relatorioLoading"
     @close="modalRelatorio = false"
   />
+
+  <RelatorioSemanalModal
+    :open="modalSemanal"
+    @close="modalSemanal = false"
+  />
 </template>
 
 <script setup>
@@ -121,6 +135,7 @@ import TotaisCard from '@/components/apreensoes/TotaisCard.vue'
 import RankList from '@/components/apreensoes/RankList.vue'
 import AdicionarApreensaoModal from '@/components/apreensoes/AdicionarApreensaoModal.vue'
 import RelatorioViaturasModal from '@/components/apreensoes/RelatorioViaturasModal.vue'
+import RelatorioSemanalModal from '@/components/apreensoes/RelatorioSemanalModal.vue'
 
 const auth = useAuthStore()
 const store = useApreensaoStore()
@@ -132,6 +147,7 @@ const { currentTime, currentDate } = useClock()
 
 const modalAdicionar = ref(false)
 const modalRelatorio = ref(false)
+const modalSemanal = ref(false)
 
 const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']
 

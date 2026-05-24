@@ -56,10 +56,11 @@ src/
 │   │   ├── LandingCarousel.vue  → carrossel automático (5s) com prev/next/dots; props: fotos[]
 │   │   └── LandingDestaque.vue  → seção militar destaque: foto circular com anel gradiente dourado, nome, descrição; props: militar { nome, foto, descricao }
 │   ├── apreensoes/
-│   │   ├── TotaisCard.vue          → card de totais mensais por item; props: totais, loading; 7 itens em grid responsivo
-│   │   ├── RankList.vue            → lista de rank reutilizável; props: items[], loading, formatter(Function); medalhas gold/silver/bronze nos top 3; formatter converte total (ex: minutos → "Xh Ymin")
+│   │   ├── TotaisCard.vue              → card de totais por período; props: totais, loading, mesLabel; 7 itens em grid responsivo
+│   │   ├── RankList.vue                → lista de rank reutilizável; props: items[], loading, formatter(Function); medalhas gold/silver/bronze nos top 3; formatter converte total (ex: minutos → "Xh Ymin")
 │   │   ├── AdicionarApreensaoModal.vue → modal form: viatura (apenas a do user), origem, grid de 7 inputs numéricos; valida ≥1 item; emite confirm(payload)
-│   │   └── RelatorioViaturasModal.vue  → modal lista last 15 viaturas com dropdown de apreensoes; apenas P3/admin abre
+│   │   ├── RelatorioViaturasModal.vue  → modal lista last 15 viaturas com dropdown de apreensoes; apenas P3/admin abre
+│   │   └── RelatorioSemanalModal.vue   → modal relatório semanal (P3/admin only); select de semana (atual + 3 anteriores, seg→dom); mostra TotaisCard + todos os RankLists filtrados por semana; carrega via store.fetchSemanal(inicio, fim)
 │   ├── frota/
 │   │   ├── VeiculoCard.vue             → card horizontal por veículo; foto/placeholder, modelo, ano, prefixos badges; ações editar/remover (confirm inline 2 etapas) visíveis apenas se isP3
 │   │   └── CadastrarVeiculoModal.vue   → modal create/edit: upload foto (base64, max 2MB), modelo, ano, lista dinâmica de prefixos com add/remove
@@ -289,11 +290,12 @@ Sidebar institucional fixa do dashboard.
 
 ### `src/stores/apreensoes.js`
 Store Pinia `apreensoes`. Gerencia stats e registro de apreensões.
-**State:** `totais`, `rankGeral[]`, `rankPorItem{}`, `loading`, `error`, `actionLoading`, `actionError`, `relatorio[]`, `relatorioLoading`
+**State:** `totais`, `rankGeral[]`, `rankPorItem{}`, `rankPatrulha[]`, `rankDias[]`, `loading`, `error`, `actionLoading`, `actionError`, `relatorio[]`, `relatorioLoading`, `semanalStats`, `semanalLoading`, `semanalError`
 **Actions:**
 - `fetchStats(mes, ano)` → `GET /api/apreensoes?mes&ano` + `GET /api/apreensoes/rank-patrulha?mes&ano` + `GET /api/apreensoes/rank-dias?mes&ano` em paralelo → popula totais, ranks apreensoes, rankPatrulha e rankDias
 - `registrar(payload)` → `POST /api/apreensoes` → registra
 - `fetchRelatorio()` → `GET /api/apreensoes/relatorio` → last 15 viaturas com apreensões (p3/admin)
+- `fetchSemanal(inicio, fim)` → `GET /api/apreensoes/relatorio-semanal?inicio&fim` (YYYY-MM-DD) → popula `semanalStats { totais, rankGeral, rankPorItem, rankPatrulha, rankDias }` (p3/admin)
 
 ### `src/stores/viaturas.js`
 Store Pinia `viaturas`. Gerencia viaturas em patrulha.
@@ -387,11 +389,12 @@ Tab inicial: `boletim` se `canPostBoletim`, senão `aviso`.
 Rota `/apreensoes` — acesso para todos autenticados.
 Layout: AppSidebar + AppTopbar. Conteúdo:
 - `TotaisCard` com totais do mês
-- Seção de rankings: botão "Registrar Apreensão" (todos) + botão "Relatório de Viaturas" (isP3 only)
+- Seção de rankings: botão "Registrar Apreensão" (todos) + botão "Relatório" (isP3 only) + botão "Relatório Semanal" (isP3 only)
 - Filtro de mês: `<select>` com últimos 13 meses; ao trocar re-chama `fetchStats(mes, ano)`
 - `ranks-top`: 3 cards lado a lado (grid 3 colunas) — RankGeral + RankPatrulha (horas, `formatMinutos`) + RankDias (dias patrulhados, `formatDias`)
 - `ranks-items`: grid 2-col com 7 RankList por item de apreensão
 - `userViatura` computed: viatura ativa onde o user está na tripulação (via viaturas.ativas)
+- `modalSemanal` ref: controla `RelatorioSemanalModal`
 - Usa `useApreensaoStore` + `useViaturasStore`
 
 ### `src/views/FrotaView.vue`

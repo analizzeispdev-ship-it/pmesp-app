@@ -32,9 +32,10 @@ server/
 │   │       ├── encerrar.patch.ts
 │   │       └── tripulacao.patch.ts
 │   ├── apreensoes/
-│   │   ├── index.get.ts     → GET /api/apreensoes — stats do mês (totais + rankGeral + rankPorItem)
-│   │   ├── index.post.ts    → POST /api/apreensoes — registrar apreensão (usuario deve estar na viatura)
-│   │   └── relatorio.get.ts → GET /api/apreensoes/relatorio — last 15 viaturas com apreensoes (p3/admin)
+│   │   ├── index.get.ts              → GET /api/apreensoes — stats do mês (totais + rankGeral + rankPorItem)
+│   │   ├── index.post.ts             → POST /api/apreensoes — registrar apreensão (usuario deve estar na viatura)
+│   │   ├── relatorio.get.ts          → GET /api/apreensoes/relatorio — last 15 viaturas com apreensoes (p3/admin)
+│   │   └── relatorio-semanal.get.ts  → GET /api/apreensoes/relatorio-semanal — stats de semana por intervalo de datas (p3/admin)
 │   ├── frota/
 │   │   ├── index.get.ts          → GET /api/frota — lista veículos ativos (any auth)
 │   │   ├── index.post.ts         → POST /api/frota — cadastrar veículo (p3/admin)
@@ -305,9 +306,12 @@ timestamps: true
 Indexes: `{ createdAt: -1 }`, `{ viaturaId: 1 }`.
 
 ### `server/services/ApreensaoService.ts`
-- `getStats(mes, ano)` → agrega período: totais por item + rankGeral (top 10 por total) + rankPorItem (top 5 por item)
-- `getPatrulhaRank(mes, ano)` → top 10 officers por minutos patrulhados no período; usa viaturas que se sobrepõem ao mês
-- `getDiasPatrulhadosRank(mes, ano)` → top 10 officers por dias distintos patrulhados no período (inclui FDS); acumula Set<string> de datas por officer
+- `getStatsByRange(start, end)` → agrega intervalo de datas: totais por item + rankGeral (top 10) + rankPorItem (top 5)
+- `getStats(mes, ano)` → delega para `getStatsByRange` usando `monthRange(mes, ano)`
+- `getPatrulhaRankByRange(start, end)` → top 10 officers por minutos patrulhados no intervalo
+- `getPatrulhaRank(mes, ano)` → delega para `getPatrulhaRankByRange`
+- `getDiasPatrulhadosRankByRange(start, end)` → top 10 officers por dias distintos patrulhados; acumula Set<string> de datas
+- `getDiasPatrulhadosRank(mes, ano)` → delega para `getDiasPatrulhadosRankByRange`
 - `create({ viaturaId, userId, items, origem })` → verifica usuário na viatura via `$or` query, snapshot crew, cria Apreensao
 - `getRelatorio()` → last 15 viaturas (qualquer status) + apreensoes de cada uma
 
@@ -331,6 +335,11 @@ Valida: ao menos um item > 0. Retorna `{ apreensao }`.
 ### `server/api/apreensoes/relatorio.get.ts`
 `GET /api/apreensoes/relatorio` — requer cargo p3 ou admin
 Retorna: `{ viaturas: [{ viaturaId, prefixo, status, abertaEm, encerradaEm, apreensoes[] }] }`
+
+### `server/api/apreensoes/relatorio-semanal.get.ts`
+`GET /api/apreensoes/relatorio-semanal?inicio=YYYY-MM-DD&fim=YYYY-MM-DD` — requer cargo p3 ou admin
+Ambos os params obrigatórios. Datas parseadas via `new Date(ano, mes-1, dia)` (hora local) para evitar offset UTC.
+Retorna: `{ totais, rankGeral, rankPorItem, rankPatrulha, rankDias }` — mesmo formato da rota mensal mas para intervalo livre.
 
 ### `server/api/viaturas/[id]/encerrar.patch.ts`
 `PATCH /api/viaturas/:id/encerrar` — requer Bearer token (qualquer role)
@@ -386,8 +395,9 @@ Retorna: `{ ausencias: [...] }` ordenadas por `createdAt desc`.
 
 ### `server/api/ausencias/index.post.ts`
 `POST /api/ausencias` — qualquer role autenticado
-Body: `{ data, motivo }`
-Valida: data e motivo obrigatórios; só 1 ausência ativa por vez (409 se já tiver).
+Body: `{ dataInicio, dataFim, motivo }`
+Valida: dataInicio, dataFim e motivo obrigatórios; fim >= inicio; só 1 ausência ativa por vez (409 se já tiver).
+Datas parseadas via `Date.UTC(ano, mes-1, dia, 12, 0, 0)` (meio-dia UTC) para evitar deslocamento de fuso horário.
 Snapshot de `usuarioNome/Rg/Graduacao`. Seta `user.ausente = true`.
 Retorna: `{ ausencia }`.
 
