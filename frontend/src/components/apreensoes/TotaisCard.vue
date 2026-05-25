@@ -63,6 +63,7 @@ const ITENS_APREENSAO = BASE_ITEMS.map((item) => {
   border: 1px solid var(--border-soft);
   border-radius: 12px;
   overflow: hidden;
+  container-type: inline-size;
 }
 
 .card-header {
@@ -156,25 +157,29 @@ const ITENS_APREENSAO = BASE_ITEMS.map((item) => {
   50% { opacity: 0.5; }
 }
 
-@media (max-width: 1024px) {
+/* Container queries: responde à largura real do card, não da viewport */
+@container (max-width: 700px) {
   .totais-grid { grid-template-columns: repeat(4, 1fr); }
+  .totais-skeleton { grid-template-columns: repeat(4, 1fr); }
   .totais-item:nth-child(4) { border-right: none; }
   .totais-item:nth-child(5),
   .totais-item:nth-child(6),
   .totais-item:nth-child(7) { border-top: 1px solid var(--border-soft); }
-  .totais-skeleton { grid-template-columns: repeat(4, 1fr); }
 }
 
-@media (max-width: 600px) {
+@container (max-width: 420px) {
   .totais-grid { grid-template-columns: repeat(2, 1fr); }
+  .totais-skeleton { grid-template-columns: repeat(2, 1fr); }
   .totais-item {
     border-right: 1px solid var(--border-soft);
     border-bottom: 1px solid var(--border-soft);
   }
   .totais-item:nth-child(even) { border-right: none; }
-  .totais-item:nth-child(4) { border-right: 1px solid var(--border-soft); }
+  /* Reset border-top herdado do bloco 4-col */
+  .totais-item:nth-child(5),
+  .totais-item:nth-child(6),
+  .totais-item:nth-child(7) { border-top: none; }
   .totais-item:last-child { border-right: none; border-bottom: none; }
-  .totais-item:last-child:nth-child(odd) { grid-column: span 2; border-right: none; }
-  .totais-skeleton { grid-template-columns: repeat(2, 1fr); }
+  .totais-item:last-child:nth-child(odd) { grid-column: span 2; }
 }
 </style>
