@@ -22,6 +22,19 @@ function countWeekdays(from: Date, to: Date): number {
   return count
 }
 
+function countDays(from: Date, to: Date): number {
+  let count = 0
+  const cur = new Date(from)
+  cur.setHours(0, 0, 0, 0)
+  const end = new Date(to)
+  end.setHours(0, 0, 0, 0)
+  while (cur <= end) {
+    count++
+    cur.setDate(cur.getDate() + 1)
+  }
+  return count
+}
+
 export default defineEventHandler(async (event) => {
   const payload = requireAuth(event)
   if (!payload.cargo.includes('p1') && payload.role !== 'admin') {
@@ -30,11 +43,22 @@ export default defineEventHandler(async (event) => {
   await connectDB()
 
   const now = new Date()
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59)
+  const query = getQuery(event)
+  const mes = query.mes ? parseInt(query.mes as string) : now.getMonth() + 1
+  const ano = query.ano ? parseInt(query.ano as string) : now.getFullYear()
+  const isCurrentMonth = mes === now.getMonth() + 1 && ano === now.getFullYear()
 
-  const [ausentesIds, users, viaturas] = await Promise.all([
-    Ausencia.find({ status: 'ativa' }).distinct('usuarioId'),
+  const monthStart = new Date(ano, mes - 1, 1)
+  const today = isCurrentMonth
+    ? new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59)
+    : new Date(ano, mes, 0, 23, 59, 59)
+
+  const [ausenciasDoMes, ausentesAtivosIds, users, viaturas] = await Promise.all([
+    Ausencia.find({
+      dataInicio: { $lte: today },
+      dataFim: { $gte: monthStart },
+    }).select('usuarioId dataInicio dataFim').lean(),
+    isCurrentMonth ? Ausencia.find({ status: 'ativa' }).distinct('usuarioId') : Promise.resolve([]),
     User.find({ active: true, role: { $ne: 'admin' } })
       .select('name rg graduacao cargo patrulhando ultimaPatrulha')
       .lean(),
@@ -44,13 +68,19 @@ export default defineEventHandler(async (event) => {
     }).select('motorista chefeDeBarca auxiliar1 auxiliar2 auxiliar3 abertaEm encerradaEm').lean(),
   ])
 
-  const ausentesSet = new Set(ausentesIds.map((id: any) => id.toString()))
-  const efetivo = users.filter((u) => !ausentesSet.has((u._id as any).toString()))
+  // Dias de ausência por usuário dentro do mês
+  const ausenciaMap = new Map<string, number>()
+  for (const a of ausenciasDoMes) {
+    const uid = (a.usuarioId as any).toString()
+    const aStart = new Date(Math.max(new Date(a.dataInicio).getTime(), monthStart.getTime()))
+    const aEnd = new Date(Math.min(new Date(a.dataFim).getTime(), today.getTime()))
+    ausenciaMap.set(uid, (ausenciaMap.get(uid) ?? 0) + countDays(aStart, aEnd))
+  }
+
+  const ausentesAtivosSet = new Set(ausentesAtivosIds.map((id: any) => id.toString()))
 
   const totalWeekdays = countWeekdays(monthStart, today)
 
-  // allDays = todos os dias (inclui fim de semana)
-  // weekDays = só dias úteis (base do cálculo de %)
   const allDays = new Map<string, Set<string>>()
   const weekDays = new Map<string, Set<string>>()
 
@@ -82,13 +112,15 @@ export default defineEventHandler(async (event) => {
     }
   }
 
-  const result = efetivo.map((user) => {
+  const result = users.map((user) => {
     const id = (user._id as any).toString()
     const diasPatrulhados = allDays.get(id)?.size ?? 0
     const diasUteisPatrulhados = weekDays.get(id)?.size ?? 0
     const percentual = totalWeekdays > 0 ? Math.round((diasUteisPatrulhados / totalWeekdays) * 100) : 0
     const flag = percentual >= 60 ? 'apto' : percentual >= 40 ? 'ativo' : 'inativo'
-    return { ...user, diasPatrulhados, diasUteisPatrulhados, totalWeekdays, percentual, flag }
+    const diasAusencia = ausenciaMap.get(id) ?? 0
+    const ausente = isCurrentMonth && ausentesAtivosSet.has(id)
+    return { ...user, diasPatrulhados, diasUteisPatrulhados, totalWeekdays, percentual, flag, diasAusencia, ausente }
   })
 
   result.sort((a, b) => {

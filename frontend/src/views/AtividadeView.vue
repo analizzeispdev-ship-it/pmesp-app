@@ -28,17 +28,22 @@
           <div class="card-header">
             <div class="header-text">
               <h3 class="card-title">Registro de Atividade</h3>
-              <span v-if="!store.loading && store.mes" class="card-subtitle">
+              <span v-if="!store.loading" class="card-subtitle">
                 {{ mesLabel }} · {{ store.totalWeekdays }} dias úteis contabilizados
               </span>
             </div>
-            <button class="btn-refresh" :disabled="store.loading" @click="store.fetchAll()">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="23 4 23 10 17 10" />
-                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
-              </svg>
-              Atualizar
-            </button>
+            <div class="header-actions">
+              <select v-model="filterMonth" class="filter-select">
+                <option v-for="m in months" :key="m.value" :value="m.value">{{ m.label }}</option>
+              </select>
+              <button class="btn-refresh" :disabled="store.loading" @click="store.fetchAll(parsedMonth.mes, parsedMonth.ano)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="23 4 23 10 17 10" />
+                  <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+                </svg>
+                Atualizar
+              </button>
+            </div>
           </div>
 
           <div class="legend">
@@ -66,7 +71,7 @@
               <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
               <circle cx="9" cy="7" r="4" />
             </svg>
-            Nenhum policial ativo sem ausência.
+            Nenhum policial ativo cadastrado.
           </div>
           <div v-else class="table-wrap">
             <table class="table">
@@ -76,14 +81,18 @@
                   <th>Graduação</th>
                   <th>Cargo</th>
                   <th class="col-center">Dias Patrulhados</th>
+                  <th class="col-center">Ausência</th>
                   <th>Cumprimento</th>
                   <th>Status</th>
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="o in store.efetivo" :key="o._id">
+                <tr v-for="o in sortedEfetivo" :key="o._id">
                   <td class="td-policial">
-                    <span class="officer-name">{{ o.name }}</span>
+                    <div class="officer-name-row">
+                      <span class="officer-name">{{ o.name }}</span>
+                      <span v-if="o.ausente" class="badge-ausente">Ausente</span>
+                    </div>
                     <span class="officer-rg">RG {{ o.rg }}</span>
                   </td>
                   <td>
@@ -93,7 +102,14 @@
                     </div>
                   </td>
                   <td>
-                    <span class="cargo-badge" :class="`cargo-${o.cargo}`">{{ getCargoLabel(o.cargo) }}</span>
+                    <div class="cargo-badges">
+                      <span
+                        v-for="c in normalizeCargo(o.cargo)"
+                        :key="c"
+                        class="cargo-badge"
+                        :class="`cargo-${c}`"
+                      >{{ getCargoLabel(c) }}</span>
+                    </div>
                   </td>
                   <td class="col-center">
                     <div class="days-cell">
@@ -107,6 +123,10 @@
                       </span>
                     </div>
                     <span class="days-meta">{{ o.diasUteisPatrulhados }} úteis / {{ o.totalWeekdays }}</span>
+                  </td>
+                  <td class="col-center">
+                    <span v-if="o.diasAusencia > 0" class="ausencia-count">{{ o.diasAusencia }}d</span>
+                    <span v-else class="days-none">—</span>
                   </td>
                   <td class="td-progress">
                     <div class="progress-wrap">
@@ -136,7 +156,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useAtividadeStore } from '@/stores/atividade'
@@ -151,6 +171,31 @@ const route = useRoute()
 const router = useRouter()
 const { currentTime, currentDate } = useClock()
 
+const now = new Date()
+const filterMonth = ref(`${now.getMonth() + 1}-${now.getFullYear()}`)
+
+const months = computed(() => {
+  const result = []
+  const d = new Date()
+  for (let i = 0; i < 13; i++) {
+    const date = new Date(d.getFullYear(), d.getMonth() - i, 1)
+    const mes = date.getMonth() + 1
+    const ano = date.getFullYear()
+    result.push({
+      value: `${mes}-${ano}`,
+      label: date.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }),
+      mes,
+      ano,
+    })
+  }
+  return result
+})
+
+const parsedMonth = computed(() => {
+  const [mes, ano] = filterMonth.value.split('-').map(Number)
+  return { mes, ano }
+})
+
 const initials = computed(() => {
   const parts = (auth.user?.name || 'U').split(' ')
   return parts.length >= 2 ? parts[0][0] + parts[parts.length - 1][0] : parts[0][0]
@@ -162,13 +207,23 @@ const roleLabel = computed(() => {
 })
 
 const mesLabel = computed(() => {
-  if (!store.mes) return ''
-  return new Date(store.mes).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
+  const { mes, ano } = parsedMonth.value
+  return new Date(ano, mes - 1, 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
+})
+
+const sortedEfetivo = computed(() => {
+  return [...(store.efetivo ?? [])].sort((a, b) => {
+    const ga = parseInt(a.graduacao) || 99
+    const gb = parseInt(b.graduacao) || 99
+    if (ga !== gb) return ga - gb
+    return a.name.localeCompare(b.name)
+  })
 })
 
 function getGraduacaoLabel(v) { return GRADUACOES.find((g) => g.value === v)?.label ?? v }
 function getGraduacaoPrefix(v) { return GRADUACOES.find((g) => g.value === v)?.nickPrefix ?? '' }
-function getCargoLabel(v) { return CARGOS.find((c) => c.value === v)?.label ?? v }
+function getCargoLabel(v) { return CARGOS.find((c) => c.value === v)?.label ?? (v || 'Padrão') }
+function normalizeCargo(cargo) { return Array.isArray(cargo) ? cargo : [cargo] }
 
 function flagLabel(flag) {
   if (flag === 'apto') return 'Apto para Promoção'
@@ -176,7 +231,15 @@ function flagLabel(flag) {
   return 'Inativo'
 }
 
-onMounted(() => store.fetchAll())
+watch(filterMonth, () => {
+  const { mes, ano } = parsedMonth.value
+  store.fetchAll(mes, ano)
+})
+
+onMounted(() => {
+  const { mes, ano } = parsedMonth.value
+  store.fetchAll(mes, ano)
+})
 
 function logout() {
   auth.logout()
@@ -203,6 +266,29 @@ function logout() {
 .header-text { display: flex; flex-direction: column; gap: 2px; }
 .card-title { font-size: var(--fs-lg); font-weight: var(--fw-bold); color: var(--text-strong); font-family: var(--font-family-display); }
 .card-subtitle { font-size: var(--fs-sm); color: var(--text-muted); text-transform: capitalize; }
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
+.filter-select {
+  border: 1px solid var(--border);
+  background: var(--surface-soft);
+  color: var(--text);
+  font-size: var(--fs-sm);
+  padding: 0.4rem 0.7rem;
+  border-radius: 8px;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.15s;
+  text-transform: capitalize;
+}
+.filter-select:focus { border-color: var(--primary-light); }
+
+.cargo-badges { display: flex; flex-wrap: wrap; gap: 0.3rem; }
 
 .btn-refresh {
   display: inline-flex;
@@ -298,9 +384,29 @@ function logout() {
 
 .col-center { text-align: center; }
 
-.td-policial { display: flex; flex-direction: column; gap: 1px; }
+.td-policial { display: flex; flex-direction: column; gap: 2px; }
+.officer-name-row { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
 .officer-name { font-weight: var(--fw-semibold); color: var(--text-strong); }
 .officer-rg { font-size: var(--fs-xs); color: var(--text-faint); }
+
+.badge-ausente {
+  font-size: var(--fs-2xs);
+  font-weight: var(--fw-semibold);
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  background: #fffbeb;
+  color: #d97706;
+  border: 1px solid #fcd34d;
+  white-space: nowrap;
+}
+
+.ausencia-count {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+  color: #d97706;
+}
+
+.days-none { color: var(--text-faint); font-size: var(--fs-sm); }
 
 .grad-cell { display: flex; align-items: center; gap: 0.35rem; white-space: nowrap; }
 .grad-prefix { font-size: var(--fs-md); line-height: 1; }

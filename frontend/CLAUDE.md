@@ -348,10 +348,10 @@ Store Pinia `fardamentos`. Gerencia lista de fardamentos ordenados.
 - `mover(id, direcao)` → swap otimista de posição no array + `PATCH /api/fardamentos/:id/mover`; reverte com `fetchAll()` em caso de erro
 
 ### `src/stores/atividade.js`
-Store Pinia `atividade`. Busca métricas do mês via `GET /api/atividade`.
+Store Pinia `atividade`. Busca métricas por mês via `GET /api/atividade?mes&ano`.
 **State:** `efetivo[]`, `totalWeekdays`, `mes`, `loading`, `error`, `minhaAtividade`, `minhaAtividadeLoading`
 **Actions:**
-- `fetchAll()` → popula efetivo (P1 only)
+- `fetchAll(mes?, ano?)` → `GET /api/atividade?mes&ano` (params opcionais, default = mês atual) → popula efetivo (P1 only)
 - `fetchMinha()` → `GET /api/atividade/minha` → popula `minhaAtividade` (`{ diasPatrulhados, diasUteisPatrulhados, totalWeekdays, percentual, flag }`)
 
 ### `src/stores/ausencias.js`
@@ -438,9 +438,11 @@ Layout idêntico ao Dashboard (sidebar + topbar + content). Usa `useClock()` e `
 ### `src/views/AtividadeView.vue`
 Rota `/registro-atividade` — acesso P1 + admin.
 Layout: AppSidebar + AppTopbar. Usa `useAtividadeStore`.
-Tabela: Policial | Graduação | Cargo | Dias Patrulhados (x/total) | Cumprimento (barra de progresso + %) | Status (badge)
+Filtro de mês: `<select>` com últimos 13 meses; ao trocar re-chama `store.fetchAll(mes, ano)`.
+Tabela ordenada por graduação (maior→menor, value 1=Coronel; computed `sortedEfetivo`). Inclui ausentes.
+Colunas: Policial (+ badge "Ausente" amber se `o.ausente`) | Graduação | Cargo (badges por item do array; `normalizeCargo`) | Dias Patrulhados (x/total + badge FDS) | Ausência (dias no mês ou "—") | Cumprimento (barra de progresso + %) | Status (badge)
 Badge de status: `apto` (verde, ≥60%), `ativo` (azul, 40-59%), `inativo` (vermelho, <40%).
-Legenda acima da tabela explicando as faixas. Botão "Atualizar" refaz `store.fetchAll()`.
+Legenda acima da tabela. Botão "Atualizar" refaz `store.fetchAll(mes, ano)`.
 Exibe mês de referência e total de dias úteis no subtítulo.
 
 ### `src/views/AusenciasView.vue`

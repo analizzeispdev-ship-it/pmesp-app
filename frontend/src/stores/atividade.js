@@ -13,12 +13,13 @@ export const useAtividadeStore = defineStore('atividade', {
   }),
 
   actions: {
-    async fetchAll() {
+    async fetchAll(mes, ano) {
       this.loading = true
       this.error = null
       try {
         const api = useApi()
-        const data = await api.get('/api/atividade')
+        const params = mes && ano ? `?mes=${mes}&ano=${ano}` : ''
+        const data = await api.get(`/api/atividade${params}`)
         this.efetivo = data.efetivo
         this.totalWeekdays = data.totalWeekdays
         this.mes = data.mes

@@ -377,13 +377,17 @@ Retorna métricas do mês corrente para o usuário logado:
 Usa `$and` com dois `$or` para filtrar viaturas do período E que contêm o usuário.
 
 ### `server/api/atividade/index.get.ts`
-`GET /api/atividade` — requer cargo p1 ou admin
-Retorna efetivo ativo sem ausência ativa, com métricas do mês corrente:
-- `diasPatrulhados`: dias úteis (seg-sex) únicos em que o policial estava em viatura ativa
-- `totalWeekdays`: total de dias úteis do mês até hoje
+`GET /api/atividade?mes=6&ano=2026` — requer cargo p1 ou admin. Query params `mes` e `ano` opcionais (default: mês atual).
+Retorna TODOS os usuários ativos não-admin (incluindo ausentes) com métricas do período:
+- `diasPatrulhados`: dias totais únicos em viatura ativa
+- `diasUteisPatrulhados`: dias úteis (seg-sex) únicos
+- `totalWeekdays`: total de dias úteis do período
 - `percentual`: % arredondado
 - `flag`: `'apto'` (≥60%), `'ativo'` (40–59%), `'inativo'` (<40%)
-Exclui admins. Ordenado por flag (apto→ativo→inativo) e nome.
+- `diasAusencia`: dias de ausência dentro do período (sobreposição de todas as ausências com o mês)
+- `ausente`: true se tem ausência ativa agora (apenas mês atual)
+Ausências buscadas via `dataInicio <= today && dataFim >= monthStart`. Função `countDays(from, to)` conta dias corridos.
+Mês passado: `ausentesAtivosIds = []` (nenhuma exclusão). Ordenado por flag→nome (graduação: frontend).
 Retorna: `{ efetivo: [...], totalWeekdays, mes }`.
 
 ### `server/api/ausencias/index.get.ts`
